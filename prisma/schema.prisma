@@ -1,0 +1,646 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+
+////////////////////////////////////
+/// ENUMS
+////////////////////////////////////
+
+enum UserRole {
+USER
+ADMIN
+SUPER_ADMIN
+}
+
+enum OrderStatus { 
+PENDING 
+PAID 
+SHIPPED 
+DELIVERED 
+CANCELED
+}
+
+enum PaymentStatus { 
+PENDING 
+SUCCESS 
+FAILED 
+}
+
+enum CardPaymentStatus { 
+PENDING 
+APPROVED 
+REJECTED 
+}
+
+enum CommentStatus { 
+PENDING 
+APPROVED 
+REJECTED 
+}
+
+enum Status { 
+ACTIVE 
+INACTIVE 
+}
+
+enum NotificationType { 
+SMS 
+EMAIL 
+}
+
+enum NotificationStatus { 
+PENDING 
+SENT 
+FAILED 
+}
+
+enum DiscountType { 
+PERCENTAGE 
+FIXED 
+}
+
+enum ShippingStatus { 
+PENDING 
+PROCESSING 
+SHIPPED 
+DELIVERED 
+CANCELED 
+}
+
+enum OTPChannel { 
+MOBILE 
+EMAIL 
+}
+
+enum OTPType { 
+LOGIN 
+RESET_PASSWORD 
+VERIFY 
+}
+
+enum Position {
+  RIGHT
+  TOP
+  DOWN
+}
+////////////////////////////////////
+/// USER
+////////////////////////////////////
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String?   @unique
+  mobile       String?    @unique
+  avatar       String?
+  password     String
+  role         UserRole  @default(USER)
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  addresses Address[]
+  orders    Order[]
+  comments  Comment[]
+  favorites Favorite[]
+  cart      Cart?
+  notifications Notification[]
+  couponUsers CouponUser[]
+  otps OTP[]
+  posts Post[]
+  postComments PostComment[]
+}
+
+model Address {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  province     String
+  city         String
+  address      String
+  postal       String
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+////////////////////////////////////
+/// CATEGORY & BRAND
+////////////////////////////////////
+
+model Category {
+  id           Int       @id @default(autoincrement())
+  name         String
+  slug         String    @unique
+  parentId     Int?
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  parent   Category? @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model ProductBrand {
+  id           Int       @id @default(autoincrement())
+  name         String    @unique
+  slug         String    @unique
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  products Product[]
+}
+
+////////////////////////////////////
+/// PRODUCT & VARIANT
+////////////////////////////////////
+
+model Product {
+  id           Int       @id @default(autoincrement())
+  title        String
+  slug         String    @unique
+  description  String
+  brandId      Int?
+  categoryId   Int
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  brand     ProductBrand? @relation(fields: [brandId], references: [id])
+  category  Category      @relation(fields: [categoryId], references: [id])
+  images    ProductImage[]
+  variants  ProductVariant[]
+  attributes ProductAttribute[]
+  comments  Comment[]
+  favorites Favorite[]
+  attachments Attachment[]
+  faqs     ProductFAQ[]
+  bundleItems ProductBundleItem[]
+}
+
+model ProductImage {
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  url          String
+  isMain       Boolean @default(false)
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductVariant {
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  color        String?
+  price        Int
+  stock        Int
+  locked       Int       @default(0)
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  stockLocks StockLock[]
+  warranties ProductWarranty[]
+}
+
+model ProductWarranty {
+  id           Int       @id @default(autoincrement())
+  variantId    Int
+  title        String
+  description  String?
+  periodMonths Int
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+model ProductAttribute {
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  key          String
+  value        String
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductFAQ {
+  id           Int       @id @default(autoincrement())
+  productId    Int
+  question     String
+  answer       String
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+////////////////////////////////////
+/// CART & ORDER
+////////////////////////////////////
+
+model Cart {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @unique
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id           Int       @id @default(autoincrement())
+  cartId       Int
+  variantId    Int
+  quantity     Int
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  userId       Int
+  address      String
+  total        Int
+  status       OrderStatus @default(PENDING)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  softDeletedAt DateTime?
+  couponId     Int?
+
+  user        User                 @relation(fields: [userId], references: [id])
+  coupon      Coupon?              @relation(fields: [couponId], references: [id])
+  items       OrderItem[]
+  payment     Payment?
+  cardPayment CardToCardPayment?
+  stockLocks  StockLock[]
+  deliveries  Delivery[]
+  attachments Attachment[]
+}
+
+model OrderItem {
+  id           Int @id @default(autoincrement())
+  orderId      Int
+  variantId    Int
+  price        Int
+  quantity     Int
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+////////////////////////////////////
+/// PAYMENT & CARD PAYMENT
+////////////////////////////////////
+
+model Payment {
+  id           Int            @id @default(autoincrement())
+  orderId      Int            @unique
+  amount       Int
+  status       PaymentStatus
+  refId        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  softDeletedAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model BankAccount {
+  id           Int      @id @default(autoincrement())
+  bankName     String
+  cardNumber   String
+  ownerName    String
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  payments CardToCardPayment[]
+}
+
+model CardToCardPayment {
+  id              Int               @id @default(autoincrement())
+  orderId         Int               @unique
+  bankAccountId   Int
+  amount          Int
+  senderCardLast4 String
+  trackingCode    String?
+  receiptImage    String?
+  paidAt          DateTime
+  status          CardPaymentStatus @default(PENDING)
+  adminNote       String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  softDeletedAt    DateTime?
+
+  order        Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id])
+}
+
+////////////////////////////////////
+/// STOCK LOCK
+////////////////////////////////////
+
+model StockLock {
+  id           Int      @id @default(autoincrement())
+  variantId    Int
+  orderId      Int
+  quantity     Int
+  expiresAt    DateTime
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, orderId])
+}
+
+////////////////////////////////////
+/// COMMENT & FAVORITE
+////////////////////////////////////
+
+model Comment {
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  productId    Int
+  rating       Int
+  text         String
+  status       CommentStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  softDeletedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id           Int @id @default(autoincrement())
+  userId       Int
+  productId    Int
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+////////////////////////////////////
+/// COUPON & COUPON USER
+////////////////////////////////////
+
+model Coupon {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  description  String?
+  discountType DiscountType
+  discountValue Int
+  usageLimit   Int?
+  usedCount    Int       @default(0)
+  startAt      DateTime
+  endAt        DateTime
+  isPublic     Boolean   @default(true)
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  orders      Order[]
+  couponUsers CouponUser[]
+}
+
+model CouponUser {
+  id        Int @id @default(autoincrement())
+  couponId  Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, userId])
+}
+
+////////////////////////////////////
+/// NOTIFICATION
+////////////////////////////////////
+
+model Notification {
+  id           Int                 @id @default(autoincrement())
+  userId       Int?
+  type         NotificationType
+  title        String
+  message      String
+  status       NotificationStatus  @default(PENDING)
+  sentAt       DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  softDeletedAt DateTime?
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+////////////////////////////////////
+/// ATTACHMENT / INVOICE / DOCUMENT
+////////////////////////////////////
+
+model Attachment {
+  id           Int       @id @default(autoincrement())
+  orderId      Int?
+  productId    Int?
+  postId       Int?
+  type         String    // INVOICE | RECEIPT | IMAGE | OTHER
+  url          String
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  order   Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+////////////////////////////////////
+/// PRODUCT BUNDLE / COMBO
+////////////////////////////////////
+
+model ProductBundle {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  price        Int
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  items ProductBundleItem[]
+}
+
+model ProductBundleItem {
+  id             Int       @id @default(autoincrement())
+  bundleId       Int
+  productId      Int
+  quantity       Int       @default(1)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  softDeletedAt   DateTime?
+
+  bundle   ProductBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product  Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+////////////////////////////////////
+/// SHIPPING / DELIVERY
+////////////////////////////////////
+
+model ShippingMethod {
+  id           Int       @id @default(autoincrement())
+  name         String
+  description  String?
+  cost         Int
+  estimatedTime String?
+  status       Status    @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  deliveries Delivery[]
+}
+
+model Delivery {
+  id               Int            @id @default(autoincrement())
+  orderId          Int
+  shippingMethodId Int
+  trackingCode     String?
+  status           ShippingStatus @default(PENDING)
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  softDeletedAt     DateTime?
+
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shippingMethod ShippingMethod @relation(fields: [shippingMethodId], references: [id])
+}
+
+////////////////////////////////////
+/// OTP
+////////////////////////////////////
+
+model OTP {
+  id           Int       @id @default(autoincrement())
+  userId       Int?
+  target       String
+  channel      OTPChannel
+  type         OTPType
+  code         String
+  expiresAt    DateTime
+  used         Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+////////////////////////////////////
+/// POST
+////////////////////////////////////
+
+model Post {
+  id           Int       @id @default(autoincrement())
+  authorId     Int?
+  title        String
+  slug         String    @unique
+  content      String
+  status       Status    @default(ACTIVE)
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  author User? @relation(fields: [authorId], references: [id])
+  comments PostComment[]
+  attachments Attachment[]
+}
+
+model PostComment {
+  id           Int           @id @default(autoincrement())
+  postId       Int
+  userId       Int?
+  text         String
+  status       CommentStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  softDeletedAt DateTime?
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model Banner {
+  id           Int       @id @default(autoincrement())
+  title        String
+  image        String
+  status       Status    @default(ACTIVE)
+  url          String
+  position     Position
+  softDeletedAt DateTime?  // null یعنی فعال، پر شده یعنی حذف نرم
+  createdAt    DateTime?  @default(now())
+  updatedAt    DateTime?  @updatedAt
+}

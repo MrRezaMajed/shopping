@@ -1,0 +1,32 @@
+// prisma/schema/blog.prisma
+
+model Post {
+  id            Int       @id @default(autoincrement())
+  authorId      Int?
+  title         String
+  slug          String    @unique
+  content       String
+  status        Status    @default(ACTIVE)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  author      User?         @relation(fields: [authorId], references: [id])
+  comments    PostComment[]
+  attachments Attachment[]
+}
+
+model PostComment {
+  id            Int           @id @default(autoincrement())
+  postId        Int
+  userId        Int?
+  text          String
+  status        CommentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  softDeletedAt DateTime?
+
+  post Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+}

@@ -1,0 +1,21 @@
+services:
+  nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: nextjs16
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    working_dir: /app
+
+    command: pnpm dev
+
+    environment:
+      NODE_ENV: development

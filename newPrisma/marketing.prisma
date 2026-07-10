@@ -1,0 +1,45 @@
+// prisma/schema/marketing.prisma
+
+model Coupon {
+  id            Int          @id @default(autoincrement())
+  code          String       @unique
+  description   String?
+  discountType  DiscountType
+  discountValue Int
+  usageLimit    Int?
+  usedCount     Int          @default(0)
+  startAt       DateTime
+  endAt         DateTime
+  isPublic      Boolean      @default(true)
+  status        Status       @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  softDeletedAt DateTime?
+
+  orders      Order[]
+  couponUsers CouponUser[]
+}
+
+model CouponUser {
+  id        Int      @id @default(autoincrement())
+  couponId  Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, userId])
+}
+
+model Banner {
+  id            Int       @id @default(autoincrement())
+  title         String
+  image         String
+  status        Status    @default(ACTIVE)
+  url           String
+  position      Position
+  softDeletedAt DateTime?
+  createdAt     DateTime? @default(now())
+  updatedAt     DateTime? @updatedAt
+}

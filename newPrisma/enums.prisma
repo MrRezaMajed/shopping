@@ -1,0 +1,79 @@
+// prisma/schema/enums.prisma
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OrderStatus { 
+  PENDING 
+  PAID 
+  SHIPPED 
+  DELIVERED 
+  CANCELED
+}
+
+enum PaymentStatus { 
+  PENDING 
+  SUCCESS 
+  FAILED 
+}
+
+enum CardPaymentStatus { 
+  PENDING 
+  APPROVED 
+  REJECTED 
+}
+
+enum CommentStatus { 
+  PENDING 
+  APPROVED 
+  REJECTED 
+}
+
+enum Status { 
+  ACTIVE 
+  INACTIVE 
+}
+
+enum NotificationType { 
+  SMS 
+  EMAIL 
+}
+
+enum NotificationStatus { 
+  PENDING 
+  SENT 
+  FAILED 
+}
+
+enum DiscountType { 
+  PERCENTAGE 
+  FIXED 
+}
+
+enum ShippingStatus { 
+  PENDING 
+  PROCESSING 
+  SHIPPED 
+  DELIVERED 
+  CANCELED 
+}
+
+enum OTPChannel { 
+  MOBILE 
+  EMAIL 
+}
+
+enum OTPType { 
+  LOGIN 
+  RESET_PASSWORD 
+  VERIFY 
+}
+
+enum Position {
+  RIGHT
+  TOP
+  DOWN
+}

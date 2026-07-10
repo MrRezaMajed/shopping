@@ -1,0 +1,63 @@
+// prisma/schema/interaction.prisma
+
+model Comment {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  productId     Int
+  rating        Int
+  text          String
+  status        CommentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  softDeletedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  productId     Int
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Notification {
+  id            Int                @id @default(autoincrement())
+  userId        Int?
+  type          NotificationType
+  title         String
+  message       String
+  status        NotificationStatus @default(PENDING)
+  sentAt        DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  softDeletedAt DateTime?
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model Attachment {
+  id            Int       @id @default(autoincrement())
+  orderId       Int?
+  productId     Int?
+  postId        Int?
+  type          String // INVOICE | RECEIPT | IMAGE | OTHER
+  url           String
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  order   Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+}

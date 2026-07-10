@@ -1,0 +1,56 @@
+// prisma/schema/user.prisma
+
+model User {
+  id            Int       @id @default(autoincrement())
+  name          String
+  email         String?   @unique
+  mobile        String?   @unique
+  avatar        String?
+  password      String
+  role          UserRole  @default(USER)
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  addresses     Address[]
+  orders        Order[]
+  comments      Comment[]
+  favorites     Favorite[]
+  cart          Cart?
+  notifications Notification[]
+  couponUsers   CouponUser[]
+  otps          OTP[]
+  posts         Post[]
+  postComments  PostComment[]
+}
+
+model Address {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  province      String
+  city          String
+  address       String
+  postal        String
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OTP {
+  id        Int        @id @default(autoincrement())
+  userId    Int?
+  target    String
+  channel   OTPChannel
+  type      OTPType
+  code      String
+  expiresAt DateTime
+  used      Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

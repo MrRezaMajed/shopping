@@ -1,0 +1,610 @@
+@import "tailwindcss";
+
+/* ۱. مخفی کردن نوار اسکرول سراسری مرورگر با حفظ قابلیت اسکرول */
+
+/* برای مرورگرهای مبتنی بر کروم، سافاری، اج جدید و اپرا */
+::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* برای مرورگرهای فایرفاکس و اینترنت اکسپلورر قدیمی */
+html {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+/* ۲. پیکربندی و بسط تم سراسری Tailwind CSS v4 */
+@theme {
+  /* الف) متصل کردن کدهای رنگی برند به متغیرهای داینامیک CSS */
+  --color-brand-25: var(--brand-25);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
+
+  /* ب) متصل کردن پالت ایندیگو به متغیرهای داینامیک برای اعمال مستقیم روی پنل مدیریت */
+  --color-indigo-25: var(--brand-25);
+  --color-indigo-50: var(--brand-50);
+  --color-indigo-100: var(--brand-100);
+  --color-indigo-200: var(--brand-200);
+  --color-indigo-300: var(--brand-300);
+  --color-indigo-400: var(--brand-400);
+  --color-indigo-500: var(--brand-500);
+  --color-indigo-600: var(--brand-600);
+  --color-indigo-700: var(--brand-700);
+  --color-indigo-800: var(--brand-800);
+  --color-indigo-900: var(--brand-900);
+  --color-indigo-950: var(--brand-950);
+
+  --animate-border-beam: border-beam 3.5s linear infinite;
+  
+  /* اضافه کردن انیمیشن گرادینت به متغیرهای تم تلویند ۴.۳ */
+  --animate-gradientMove: gradientMove 6s ease infinite;
+
+  @keyframes border-beam {
+    from {
+      --border-angle: 0deg;
+    }
+    to {
+      --border-angle: 360deg;
+    }
+  }
+
+  --font-*: initial;
+  --font-outfit: Outfit, sans-serif;
+
+  --breakpoint-*: initial;
+  --breakpoint-2xsm: 375px;
+  --breakpoint-xsm: 425px;
+  --breakpoint-3xl: 2000px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  --text-title-2xl: 72px;
+  --text-title-2xl--line-height: 90px;
+  --text-title-xl: 60px;
+  --text-title-xl--line-height: 72px;
+  --text-title-lg: 48px;
+  --text-title-lg--line-height: 60px;
+  --text-title-md: 36px;
+  --text-title-md--line-height: 44px;
+  --text-title-sm: 30px;
+  --text-title-sm--line-height: 38px;
+  --text-theme-xl: 20px;
+  --text-theme-xl--line-height: 30px;
+  --text-theme-sm: 14px;
+  --text-theme-sm--line-height: 20px;
+  --text-theme-xs: 12px;
+  --text-theme-xs--line-height: 18px;
+
+  --color-current: currentColor;
+  --color-transparent: transparent;
+  --color-white: #ffffff;
+  --color-black: #101828;
+
+  --color-blue-light-25: #f5fbff;
+  --color-blue-light-50: #f0f9ff;
+  --color-blue-light-100: #e0f2fe;
+  --color-blue-light-200: #b9e6fe;
+  --color-blue-light-300: #7cd4fd;
+  --color-blue-light-400: #36bffa;
+  --color-blue-light-500: #0ba5ec;
+  --color-blue-light-600: #0086c9;
+  --color-blue-light-700: #026aa2;
+  --color-blue-light-800: #065986;
+  --color-blue-light-900: #0b4a6f;
+  --color-blue-light-950: #062c41;
+
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #e4e7ec;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1d2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #0c111d;
+  --color-gray-dark: #1a2231;
+
+  --color-orange-25: #fffaf5;
+  --color-orange-50: #fff6ed;
+  --color-orange-100: #ffead5;
+  --color-orange-200: #fddcab;
+  --color-orange-300: #feb273;
+  --color-orange-400: #fd853a;
+  --color-orange-500: #fb6514;
+  --color-orange-600: #ec4a0a;
+  --color-orange-700: #c4320a;
+  --color-orange-800: #9c2a10;
+  --color-orange-900: #7e2410;
+  --color-orange-950: #511c10;
+
+  --color-success-25: #f6fef9;
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-200: #a6f4c5;
+  --color-success-300: #6ce9a6;
+  --color-success-400: #32d583;
+  --color-success-500: #12b76a;
+  --color-success-600: #039855;
+  --color-success-700: #027a48;
+  --color-success-800: #05603a;
+  --color-success-900: #054f31;
+  --color-success-950: #053321;
+
+  --color-error-25: #fffbfa;
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-200: #fecdca;
+  --color-error-300: #fda29b;
+  --color-error-400: #f97066;
+  --color-error-500: #f04438;
+  --color-error-600: #d92d20;
+  --color-error-700: #b42318;
+  --color-error-800: #912018;
+  --color-error-900: #7a271a;
+  --color-error-950: #55160c;
+
+  --color-warning-25: #fffcf5;
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef0c7;
+  --color-warning-200: #fedf89;
+  --color-warning-300: #fec84b;
+  --color-warning-400: #fdb022;
+  --color-warning-500: #f79009;
+  --color-warning-600: #dc6803;
+  --color-warning-700: #b54708;
+  --color-warning-800: #93370d;
+  --color-warning-900: #7a2e0e;
+  --color-warning-950: #4e1d09;
+
+  --color-theme-pink-500: #ee46bc;
+  --color-theme-purple-500: #7a5af8;
+
+  --shadow-theme-md:
+    0px 4px 8px -2px rgba(16, 24, 40, 0.1),
+    0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-sm:
+    0px 1px 3px 0px rgba(16, 24, 40, 0.1),
+    0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --shadow-theme-xl:
+    0px 20px 24px -4px rgba(16, 24, 40, 0.08),
+    0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
+  --shadow-slider-navigation:
+    0px 1px 2px 0px rgba(16, 24, 40, 0.1), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+  --shadow-tooltip:
+    0px 4px 6px -2px rgba(16, 24, 40, 0.05),
+    -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
+
+  --drop-shadow-4xl:
+    0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
+
+  --z-index-1: 1;
+  --z-index-9: 9;
+  --z-index-99: 99;
+  --z-index-999: 999;
+  --z-index-9999: 9999;
+  --z-index-99999: 99999;
+  --z-index-999999: 999999;
+}
+
+/* ۳. انیمیشن‌ها و ویژگی‌های سفارشی */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.perfect-border-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2.5px solid transparent;
+  border-radius: inherit;
+  
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 60%,
+    #00ffcc 75%,
+    #2ecc71 90%,
+    #00ffcc 100%
+  ) border-box;
+  
+  filter: drop-shadow(0 0 12px rgba(0, 255, 204, 0.65)) 
+          drop-shadow(0 0 4px rgba(46, 204, 113, 0.4));
+
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@keyframes border-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.border-spin {
+  animation: border-spin 8s linear infinite;
+}
+
+@keyframes gradientMove {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.before\:animate-shimmer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes fade-slide-in {
+  0% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-slide-out {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
+.animate-fade-slide-in {
+  animation: fade-slide-in 0.5s ease-out forwards;
+}
+
+.animate-fade-slide-out {
+  animation: fade-slide-out 0.5s ease-in forwards;
+}
+
+.loader-border {
+  border-top-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: white;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ۴. فونت‌های بومی پروژه */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-Thin.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-ExtraLight.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-ExtraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-Light.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-Regular.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-Medium.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-SemiBold.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-Bold.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-ExtraBold.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/vazir/Vazirmatn-Black.woff2') format('woff2'),
+       url('/fonts/vazir/Vazirmatn-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Vazirmatn;
+  height: 100%;
+}
+
+html {
+  height: 100%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn .2s ease-out;
+}
+
+/* ۵. لایه‌بندی ساختاری و متغیرهای رنگ مایه (Accent Colors) */
+@layer base {
+  /* پالت اول: تم نیلگون (Indigo - پیش‌فرض سیستم) */
+  :root, html {
+    --brand-25: #f2f7ff;
+    --brand-50: #ecfdf5; /* تصحیح بر اساس نیاز تلویند v4 در صورت لزوم */
+    --brand-100: #dde9ff;
+    --brand-200: #c2d6ff;
+    --brand-300: #9cb9ff;
+    --brand-400: #7592ff;
+    --brand-500: #465fff;
+    --brand-600: #3641f5;
+    --brand-700: #2a31d8;
+    --brand-800: #252dae;
+    --brand-900: #262e89;
+    --brand-950: #161950;
+  }
+
+  /* پالت دوم: تم زمرّد (Emerald - سبز درخشان) */
+  [data-accent="emerald"] {
+    --brand-25: #f0fdf4;
+    --brand-50: #ecfdf5;
+    --brand-100: #d1fae5;
+    --brand-200: #a7f3d0;
+    --brand-300: #6ee7b7;
+    --brand-400: #34d399;
+    --brand-500: #10b981;
+    --brand-600: #059669;
+    --brand-700: #047857;
+    --brand-800: #065f46;
+    --brand-900: #064e3b;
+    --brand-950: #022c22;
+  }
+
+  /* پالت سوم: تم یاقوت (Rose - قرمز پرانرژی) */
+  [data-accent="rose"] {
+    --brand-25: #fff5f5;
+    --brand-50: #fff1f2;
+    --brand-100: #ffe4e6;
+    --brand-200: #fecdd3;
+    --brand-300: #fda4af;
+    --brand-400: #fb7185;
+    --brand-500: #f43f5e;
+    --brand-600: #e11d48;
+    --brand-700: #be123c;
+    --brand-800: #9f1239;
+    --brand-900: #881337;
+    --brand-950: #4c0519;
+  }
+
+  /* پالت چهارم: تم کهربا (Amber - نارنجی طلایی گرم) */
+  [data-accent="amber"] {
+    --brand-25: #fffdf5;
+    --brand-50: #fffbeb;
+    --brand-100: #fef3c7;
+    --brand-200: #fde68a;
+    --brand-300: #fcd34d;
+    --brand-400: #fbbf24;
+    --brand-500: #f59e0b;
+    --brand-600: #d97706;
+    --brand-700: #b45309;
+    --brand-800: #92400e;
+    --brand-900: #78350f;
+    --brand-950: #451a03;
+  }
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  body {
+    @apply relative font-normal font-outfit z-1 bg-gray-50;
+  }
+}
+
+/* ۶. کلاس‌های کمکی و منوها (Utilities) */
+@utility menu-item {
+  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+}
+
+@utility menu-item-active {
+  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+}
+
+@utility menu-item-inactive {
+  @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+}
+
+@utility menu-item-icon {
+  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400;
+}
+
+@utility menu-item-icon-active {
+  @apply text-brand-500 dark:text-brand-400;
+}
+
+@utility menu-item-icon-inactive {
+  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+}
+
+@utility menu-item-arrow {
+  @apply relative;
+}
+
+@utility menu-item-arrow-active {
+  @apply rotate-180 text-brand-500 dark:text-brand-400;
+}
+
+@utility menu-item-arrow-inactive {
+  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+}
+
+@utility menu-dropdown-item {
+  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+}
+
+@utility menu-dropdown-item-active {
+  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+}
+
+@utility menu-dropdown-item-inactive {
+  @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+}
+
+@utility menu-dropdown-badge {
+  @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-brand-500 dark:text-brand-400;
+}
+
+@utility menu-dropdown-badge-active {
+  @apply bg-brand-100 dark:bg-brand-500/20;
+}
+
+@utility menu-dropdown-badge-inactive {
+  @apply bg-brand-50 group-hover:bg-brand-100 dark:bg-brand-500/15 dark:group-hover:bg-brand-500/20;
+}
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    @apply size-1.5;
+  }
+
+  &::-webkit-scrollbar-track {
+    @apply rounded-full;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+  }
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #344054;
+}

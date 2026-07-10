@@ -1,0 +1,31 @@
+// prisma/schema/shipping.prisma
+
+model ShippingMethod {
+  id            Int       @id @default(autoincrement())
+  name          String
+  description   String?
+  cost          Int
+  estimatedTime String?
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  deliveries Delivery[]
+}
+
+model Delivery {
+  id               Int            @id @default(autoincrement())
+  orderId          Int
+  shippingMethodId Int
+  trackingCode     String?
+  status           ShippingStatus @default(PENDING)
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  softDeletedAt    DateTime?
+
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shippingMethod ShippingMethod @relation(fields: [shippingMethodId], references: [id])
+}

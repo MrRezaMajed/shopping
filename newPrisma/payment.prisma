@@ -1,0 +1,46 @@
+// prisma/schema/payment.prisma
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  orderId       Int           @unique
+  amount        Int
+  status        PaymentStatus
+  refId         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  softDeletedAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model BankAccount {
+  id            Int       @id @default(autoincrement())
+  bankName      String
+  cardNumber    String
+  ownerName     String
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime?
+
+  payments CardToCardPayment[]
+}
+
+model CardToCardPayment {
+  id              Int               @id @default(autoincrement())
+  orderId         Int               @unique
+  bankAccountId   Int
+  amount          Int
+  senderCardLast4 String
+  trackingCode    String?
+  receiptImage    String?
+  paidAt          DateTime
+  status          CardPaymentStatus @default(PENDING)
+  adminNote       String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  softDeletedAt   DateTime?
+
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id])
+}

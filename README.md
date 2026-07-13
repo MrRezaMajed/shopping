@@ -50,3 +50,4 @@ pnpm db:seed
 
 For more console shortcuts see `commands.md`.
 # shopping
+# shopping

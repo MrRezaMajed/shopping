@@ -1,7 +1,8 @@
 import React from "react";
 
 export interface Column<T> {
-  key: keyof T;
+  // پشتیبانی از کلیدهای مجازی خارج از تایپ اصلی
+  key: keyof T | string;
   label: string;
   render?: (item: T) => React.ReactNode;
 }

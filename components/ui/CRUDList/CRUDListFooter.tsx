@@ -1,5 +1,3 @@
-// بخش فوتر و صفحه‌بندی جدول
-
 import React from "react";
 import Pagination from "@/components/ui/DataTable/Pagination";
 import { toPersianNumber } from "@/lib/utils/persianNumbers";
@@ -29,9 +27,9 @@ export const CRUDListFooter = React.memo(function CRUDListFooter({
   return (
     <div
       className="
-        grid grid-cols-1 md:grid-cols-3 items-center gap-4 p-5 sm:p-6
-        bg-slate-100/30 dark:bg-[#121420]/30
-        border-t border-slate-150 dark:border-[#1f2235]/40
+        grid grid-cols-1 md:grid-cols-3 items-center gap-5 p-5 sm:p-6
+        bg-slate-50/50 dark:bg-[#0c0d14]/40
+        border-t border-slate-100 dark:border-slate-800/40
         text-xs sm:text-sm text-slate-500 dark:text-slate-400
       "
     >
@@ -51,8 +49,8 @@ export const CRUDListFooter = React.memo(function CRUDListFooter({
         )}
       </div>
 
-      <div className="hidden md:block justify-self-end text-xs font-semibold text-slate-400 dark:text-slate-500">
-        مجموع کل: {toPersianNumber(total)} مورد
+      <div className="hidden md:block justify-self-end text-xs font-medium text-slate-400 dark:text-slate-500">
+        مجموع کل: <span className="font-semibold text-slate-700 dark:text-slate-300">{toPersianNumber(total)}</span> مورد
       </div>
     </div>
   );

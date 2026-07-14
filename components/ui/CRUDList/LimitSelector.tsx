@@ -1,5 +1,3 @@
-// منوی تغییر تعداد آیتم در صفحه
-
 import React from "react";
 import { toPersianNumber } from "@/lib/utils/persianNumbers";
 
@@ -23,8 +21,8 @@ export const LimitSelector = React.memo(function LimitSelector({
   if (!onLimitChange) return null;
 
   return (
-    <div className="flex items-center gap-2.5 whitespace-nowrap flex-wrap justify-center md:justify-start">
-      <label htmlFor="crud-list-limit" className="shrink-0">
+    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 whitespace-nowrap flex-wrap justify-center md:justify-start">
+      <label htmlFor="crud-list-limit" className="shrink-0 text-xs">
         نمایش
       </label>
       <select
@@ -32,14 +30,14 @@ export const LimitSelector = React.memo(function LimitSelector({
         value={limit}
         onChange={(e) => onLimitChange(Number(e.target.value))}
         className="
-          rounded-xl
-          border border-slate-200 dark:border-[#1f2235]
-          bg-white dark:bg-[#121420]
+          rounded-lg
+          border border-slate-200 dark:border-slate-800
+          bg-white dark:bg-slate-950
           text-slate-700 dark:text-slate-200
-          px-3 py-1.5 text-xs font-semibold
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40
-          transition-all duration-200
-          hover:border-indigo-500/40
+          px-2.5 py-1 text-xs font-semibold
+          focus:outline-none focus:ring-1.5 focus:ring-indigo-500/30
+          transition-colors duration-200
+          hover:border-slate-300 dark:hover:border-slate-700
           cursor-pointer
         "
       >
@@ -49,7 +47,7 @@ export const LimitSelector = React.memo(function LimitSelector({
           </option>
         ))}
       </select>
-      <span>
+      <span className="text-xs">
         مورد (نمایش {toPersianNumber(startRange)} تا {toPersianNumber(endRange)} از{" "}
         {toPersianNumber(total)})
       </span>

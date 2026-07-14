@@ -1,5 +1,3 @@
-// کامپوننت والد و اصلی CRUDList
-
 "use client";
 
 import React from "react";
@@ -11,7 +9,7 @@ import { SkeletonRow } from "./SkeletonRow";
 import { EmptyState } from "./EmptyState";
 import { CRUDListFooter } from "./CRUDListFooter";
 
-function CRUDList<T extends { id: number }>({
+function CRUDListInner<T extends { id: number }>({
   columns,
   data,
   total,
@@ -33,24 +31,35 @@ function CRUDList<T extends { id: number }>({
   return (
     <div className="relative w-full">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
-        {/* کانتینر با افکت چرخش نئونی حاشیه‌ها */}
-        <div className="relative rounded-[24px] p-[2px] overflow-hidden bg-slate-200/30 dark:bg-[#1a1c29]/50">
+        
+        {/* کانتینر بیرونی - حذف overflow-hidden برای اجازه به انتشار ملایم نور نئونی به بیرون از جدول */}
+        <div className="relative rounded-[24px] p-[1.5px] bg-gray-200/30 dark:bg-gray-dark/50 transition-colors duration-300">
+          
+          {/* پرتو لیزری چرخان (Border Beam) دور کل جدول متصل به Accent Color فعال سیستم */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] aspect-square animate-[spin_6s_linear_infinite] pointer-events-none opacity-80 dark:opacity-60 z-0 motion-reduce:animate-none"
+            className="absolute inset-0 pointer-events-none rounded-[inherit] border-[2px] border-transparent animate-border-beam z-0 motion-reduce:hidden"
             style={{
-              background:
-                "conic-gradient(from 90deg at 50% 50%, #6366f1 0%, #a855f7 25%, transparent 50%, transparent 100%)",
+              /* ایجاد شیب رنگی متغیر بر اساس رنگ تم فعال کاربر */
+              background: "conic-gradient(from var(--border-angle), transparent 60%, var(--brand-300) 75%, var(--brand-500) 90%, var(--brand-300) 100%) border-box",
+              
+              /* ماسک کردن داخل جدول به روش مدرن برای نمایش نور فقط روی خط بوردر خارجی */
+              WebkitMask: "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+              
+              /* تابش هاله ملایم نئونی متناسب با رنگ تم فعال کاربر */
+              filter: "drop-shadow(0 0 10px var(--brand-500)) opacity(0.7)",
             }}
           />
 
           {/* محفظه اصلی جدول شیشه‌ای دکوراتیو */}
           <div
             className="
-              relative w-full rounded-[22px] z-10
-              bg-white/95 dark:bg-[#0c0d14]/98 backdrop-blur-3xl
+              relative w-full rounded-[23px] z-10
+              bg-white/95 dark:bg-gray-950/98 backdrop-blur-3xl
               shadow-[0_12px_45px_rgba(0,0,0,0.02)]
               dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)]
-              border border-slate-200/50 dark:border-[#1f2235]/40
+              border border-gray-200/50 dark:border-gray-800/40
               overflow-hidden
               transition-all duration-300
             "
@@ -70,7 +79,7 @@ function CRUDList<T extends { id: number }>({
                         </td>
                       </tr>
                     ) : (
-                      <AnimatePresence mode="popLayout">
+                      <AnimatePresence mode="popLayout" initial={false}>
                         {data.map((item, idx) => (
                           <CRUDListRow
                             key={item.id}
@@ -113,4 +122,8 @@ function CRUDList<T extends { id: number }>({
   );
 }
 
-export default React.memo(CRUDList) as typeof CRUDList;
+export const CRUDList = React.memo(CRUDListInner) as <T extends { id: number }>(
+  props: CRUDListProps<T>
+) => React.JSX.Element;
+
+export default CRUDList;

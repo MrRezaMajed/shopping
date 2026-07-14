@@ -1,7 +1,5 @@
-// ردیف تکی داده‌ها
-
 import React from "react";
-import { FiEdit, FiTrash2, FiRotateCcw, FiTrash } from "react-icons/fi";
+import { Pencil, Trash2, RotateCcw, Trash } from "lucide-react";
 import { motion } from "framer-motion";
 import { toPersianNumber } from "@/lib/utils/persianNumbers";
 import { Column } from "./types";
@@ -20,7 +18,7 @@ interface CRUDListRowProps<T> {
   onPermanentDelete?: (item: T) => void;
 }
 
-export const CRUDListRow = React.memo(function CRUDListRow<T extends { id: number }>({
+function CRUDListRowInner<T extends { id: number }>({
   item,
   idx,
   columns,
@@ -36,48 +34,97 @@ export const CRUDListRow = React.memo(function CRUDListRow<T extends { id: numbe
 
   return (
     <motion.tr
-      key={item.id}
-      initial={{ opacity: 0, x: 15 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -15 }}
+      layout="position"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }}
       transition={{
         type: "spring",
-        stiffness: 140,
-        damping: 15,
-        delay: Math.min(idx, 12) * 0.02,
+        stiffness: 260,
+        damping: 25,
+        delay: Math.min(idx, 8) * 0.02,
       }}
       className="
-        group
-        relative
-        bg-white/80 dark:bg-[#121420]/60
-        hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10
-        transition-all duration-200
+        group relative
+        bg-transparent dark:bg-transparent
+        
+        /* اعمال بک‌گراند بسیار ملایم و شیک بر اساس رنگ اکتیو تم فعال سیستم */
+        hover:bg-brand-50/30 dark:hover:bg-brand-950/15
+        
+        /* هاله ملایم دور کارت همرنگ با تم فعال */
+        hover:shadow-[0_8px_30px_rgba(var(--brand-500),0.02)]
+        
+        transition-all duration-300
       "
     >
-      <td className="p-4 text-center text-slate-500 dark:text-slate-400 font-semibold rounded-r-2xl border-y border-r border-slate-100 dark:border-[#1f2235]/50 group-hover:border-indigo-100 dark:group-hover:border-indigo-900/30 relative overflow-hidden transition-all duration-200">
-        <div className="absolute right-0 top-0 bottom-0 w-[3px] bg-indigo-500 scale-y-0 group-hover:scale-y-100 transition-transform duration-200 origin-center" />
-        <span className="relative z-10">{toPersianNumber((page - 1) * limit + idx + 1)}</span>
+      {/* شمارشگر ردیف همراه با نوار شاخص پویا (سمت راست) */}
+      <td 
+        className="
+          p-4 text-center text-gray-400 dark:text-gray-500 font-medium rounded-r-[18px] relative overflow-hidden transition-all duration-300
+          border-y border-r border-transparent 
+          
+          /* هماهنگی بوردر هاور با تم انتخابی کاربر */
+          group-hover:border-brand-100 dark:group-hover:border-brand-900/20
+        "
+      >
+        {/* نوار شاخص عمودی متصل به Accent Color فعال سیستم */}
+        <div 
+          className="
+            absolute right-0 top-[15%] bottom-[15%] w-[4px] 
+            bg-gradient-to-b from-brand-400 via-brand-500 to-brand-600
+            rounded-l-full origin-right
+            opacity-0 
+            scale-y-0 
+            translate-x-1.5
+            group-hover:opacity-100 
+            group-hover:scale-y-100 
+            group-hover:translate-x-0
+            transition-all 
+            duration-300 
+            ease-[cubic-bezier(0.34,1.56,0.64,1)]
+            z-20
+          " 
+        />
+        <span className="relative z-10 text-[13px]">{toPersianNumber((page - 1) * limit + idx + 1)}</span>
       </td>
 
-      {columns.map((c) => (
-        <td
-          key={`${item.id}-${String(c.key)}`}
-          className={`p-4 text-slate-700 dark:text-slate-200 text-[14px] leading-relaxed border-y border-slate-100 dark:border-[#1f2235]/50 group-hover:border-indigo-100 dark:group-hover:border-indigo-900/30 transition-all duration-200 ${
-            isHidden(String(c.key)) ? "hidden lg:table-cell" : ""
-          }`}
-        >
-          {c.render ? c.render(item) : String(item[c.key] ?? "-")}
-        </td>
-      ))}
+      {/* ستون‌های میانی جدول */}
+      {columns.map((c) => {
+        const value = item[c.key as keyof T];
+        return (
+          <td
+            key={`${item.id}-${String(c.key)}`}
+            className={`
+              p-4 text-gray-700 dark:text-gray-300 text-[13px] transition-all duration-300 
+              border-y border-transparent
+              
+              /* هماهنگی لبه‌های بالا و پایین با تم انتخابی کاربر */
+              group-hover:border-y-brand-100 dark:group-hover:border-y-brand-900/20
+              ${isHidden(String(c.key)) ? "hidden lg:table-cell" : ""}
+            `}
+          >
+            {c.render ? c.render(item) : String(value ?? "-")}
+          </td>
+        );
+      })}
 
-      <td className="p-4 rounded-l-2xl border-y border-l border-slate-100 dark:border-[#1f2235]/50 group-hover:border-indigo-100 dark:group-hover:border-indigo-900/30 transition-all duration-200">
+      {/* ستون دکمه‌های عملیاتی (سمت چپ) */}
+      <td 
+        className="
+          p-4 rounded-l-[18px] transition-all duration-300
+          border-y border-l border-transparent
+          
+          /* هماهنگی لبه‌ی سمت چپ کارت با تم انتخابی کاربر */
+          group-hover:border-brand-100 dark:group-hover:border-brand-900/20
+        "
+      >
         <div className="flex justify-center gap-2">
           {onEdit && (
             <RowActionButton
               kind="edit"
               title="ویرایش"
               onClick={() => onEdit(item)}
-              icon={<FiEdit className="w-4 h-4" />}
+              icon={<Pencil className="w-3.5 h-3.5" />}
             />
           )}
           {onRestore && (
@@ -85,7 +132,7 @@ export const CRUDListRow = React.memo(function CRUDListRow<T extends { id: numbe
               kind="restore"
               title="بازگردانی"
               onClick={() => onRestore(item)}
-              icon={<FiRotateCcw className="w-4 h-4" />}
+              icon={<RotateCcw className="w-3.5 h-3.5" />}
             />
           )}
           {onDelete && (
@@ -93,7 +140,7 @@ export const CRUDListRow = React.memo(function CRUDListRow<T extends { id: numbe
               kind="delete"
               title="حذف موقت"
               onClick={() => onDelete(item)}
-              icon={<FiTrash2 className="w-4 h-4" />}
+              icon={<Trash2 className="w-3.5 h-3.5" />}
             />
           )}
           {onPermanentDelete && (
@@ -101,11 +148,15 @@ export const CRUDListRow = React.memo(function CRUDListRow<T extends { id: numbe
               kind="permanent"
               title="حذف دائمی"
               onClick={() => onPermanentDelete(item)}
-              icon={<FiTrash className="w-4 h-4" />}
+              icon={<Trash className="w-3.5 h-3.5" />}
             />
           )}
         </div>
       </td>
     </motion.tr>
   );
-}) as <T extends { id: number }>(props: CRUDListRowProps<T>) => React.ReactElement;
+}
+
+export const CRUDListRow = React.memo(CRUDListRowInner) as <T extends { id: number }>(
+  props: CRUDListRowProps<T>
+) => React.JSX.Element;

@@ -1,5 +1,3 @@
-// components/ui/CRUDPage/CRUDPage.tsx
-
 "use client";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { 
@@ -31,7 +29,7 @@ import { ActiveFilters } from "./ActiveFilters";
 import { CRUDPageHeader } from "./CRUDPageHeader";
 import { NavigationCards } from "./NavigationCards";
 
-// ایمپورت کردن سیستم نوتیفیکیشن اختصاصی جایگزین Sonner
+// ایمپورت کردن سیستم نوتیفیکیشن اختصاصی
 import { useNotification } from "@/context/NotificationContext";
 
 import {
@@ -67,7 +65,6 @@ export default function CRUDPage({
   filterTranslations,
 }: CRUDPageProps) {
   
-  // فراخوانی هوک‌های نوتیفیکیشن سراسری و مودال تاییدیه
   const { confirm, addNotification } = useNotification();
 
   const {
@@ -94,6 +91,7 @@ export default function CRUDPage({
   const [paletteIndex, setPaletteIndex] = useState(0);
   const paletteInputRef = useRef<HTMLInputElement>(null);
   const [productStats, setProductStats] = useState({ total: 0, outOfStock: 0, lowStock: 0 });
+
   const activeFilters = useMemo(() => {
     return Object.entries(filters).filter(
       ([_, value]) => value !== undefined && value !== "" && value !== null
@@ -177,7 +175,7 @@ export default function CRUDPage({
         addNotification({
           type: "error",
           title: "خطا در تغییر وضعیت",
-          message: res.error || "خطا در تغییر وضعیت رکورد رخ داد.",
+          message: res.error || "خطا در تغییر وضعیت رخ داد.",
           duration: 4000,
         });
         setData((prev) =>
@@ -205,14 +203,14 @@ export default function CRUDPage({
         addNotification({
           type: "error",
           title: "خطا در حذف اطلاعات",
-          message: res.error || "حذف رکورد با خطا مواجه شد.",
+          message: res.error || "حذف رخ داد.",
           duration: 4500,
         });
         return;
       }
       addNotification({
         type: "success",
-        title: "عملیات حذف موفق",
+        title: "حذف موفق",
         message: permanent ? `${modelName} به طور دائمی حذف شد` : `${modelName} با موفقیت حذف شد`,
         duration: 4000,
       });
@@ -229,7 +227,7 @@ export default function CRUDPage({
         addNotification({
           type: "error",
           title: "خطا در بازیابی",
-          message: res.error || "بازیابی رکورد با خطا مواجه شد.",
+          message: res.error || "بازیابی رخ داد.",
           duration: 4500,
         });
         return;
@@ -246,11 +244,10 @@ export default function CRUDPage({
     [model, deleteItemLocal, refreshList, addNotification]
   );
 
-  // دایالوگ تایید حذف دو مرحله‌ای با قرارگیری در مرکز صفحه
   const showDeleteConfirm = async (item: any, permanent = false) => {
     const isConfirmed = await confirm({
       title: permanent ? "حذف دائمی رکورد" : "انتقال به زباله‌دان",
-      message: `آیا از حذف "${item.title || item.name || "این آیتم"}" ${permanent ? "به طور دائمی" : ""} اطمینان دارید؟ این اقدام ممکن است غیرقابل بازگشت باشد.`,
+      message: `آیا از حذف "${item.title || item.name || "این آیتم"}" ${permanent ? "به طور دائمی" : ""} اطمینان دارید؟`,
       confirmText: "بله، حذف شود",
       cancelText: "انصراف",
       type: "error",
@@ -261,7 +258,6 @@ export default function CRUDPage({
     }
   };
 
-  // متد مربوط به باز کردن فرم در حالت ویرایش (رفع خطای ReferenceError)
   const handleEdit = useCallback((item: any) => {
     setEditingItem(item);
     setMode("edit");
@@ -278,7 +274,7 @@ export default function CRUDPage({
         addNotification({
           type: "error",
           title: "خطا در ثبت اطلاعات",
-          message: res.error || "ذخیره‌سازی اطلاعات با خطا مواجه شد.",
+          message: res.error || "خطا رخ داد.",
           duration: 4500,
         });
       } else {
@@ -302,7 +298,8 @@ export default function CRUDPage({
         key: field.name,
         label: field.label,
         render: (item: any) => {
-          if (field.cellRenderer) return field.cellRenderer(item);
+          // اصلاح حیاتی: ارسال تابع زنده refreshListِ همین هوک فعال به عنوان آرگومان دوم سلول رندرها
+          if (field.cellRenderer) return field.cellRenderer(item, refreshList);
           
           if (!showTrash && field.name === "status" && enableStatusToggle) {
             return (
@@ -340,7 +337,7 @@ export default function CRUDPage({
           return String(value ?? "-");
         },
       })),
-    [fields, showTrash, enableStatusToggle, handleToggleStatus, dynamicOptions]
+    [fields, showTrash, enableStatusToggle, handleToggleStatus, dynamicOptions, refreshList] // <--- ردیابی زنده تغییرات رفرشر
   );
 
   const commandItems = useMemo(() => {
@@ -357,7 +354,7 @@ export default function CRUDPage({
       },
       {
         id: "refresh",
-        label: "بروزرسانی و همگام‌سازی لیست با سرور",
+        label: "بروزرسانی لیست",
         shortcut: "R",
         icon: <FiRefreshCw className="h-4 w-4" />,
         action: () => {
@@ -367,7 +364,7 @@ export default function CRUDPage({
       },
       {
         id: "trash",
-        label: showTrash ? "بازگشت به لیست اصلی اطلاعات" : "ورود به بخش زباله‌دان / موارد حذف شده",
+        label: showTrash ? "بازگشت به لیست اصلی" : "مشاهده سطل زباله",
         shortcut: "T",
         icon: <FiTrash2 className="h-4 w-4" />,
         action: () => {
@@ -377,7 +374,7 @@ export default function CRUDPage({
       },
       {
         id: "clear_filters",
-        label: "پاکسازی کامل فیلترها و کلمات جستجو شده",
+        label: "پاکسازی کامل فیلترها",
         shortcut: "Del",
         icon: <FiX className="h-4 w-4" />,
         action: () => {
@@ -469,7 +466,6 @@ export default function CRUDPage({
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none -z-10" />
 
       <div 
@@ -494,7 +490,6 @@ export default function CRUDPage({
               exit="exit"
               className="space-y-6"
             >
-              {/* هدر صفحه */}
               <CRUDPageHeader
                 modelName={modelName}
                 loading={loading}
@@ -505,7 +500,6 @@ export default function CRUDPage({
                 {!showTrash && <CreateButton onClick={handleCreate} label={`ایجاد ${modelName} جدید`} />}
               </CRUDPageHeader>
 
-              {/* کارت‌های آماری بالایی */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {model === "product" ? (
                   <>
@@ -514,7 +508,7 @@ export default function CRUDPage({
                       value={toPersianNumber(productStats.total)}
                       loading={loading}
                       glowColor="rgba(59, 130, 246, 0.15)"
-                      iconBg="bg-blue-500/5 dark:bg-blue-500/10 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.05)]"
+                      iconBg="bg-blue-500/5 dark:bg-blue-500/10 text-blue-500"
                       icon={<FiDatabase className="h-5 w-5" />}
                     />
                     <StatCard
@@ -522,7 +516,7 @@ export default function CRUDPage({
                       value={toPersianNumber(productStats.outOfStock)}
                       loading={loading}
                       glowColor="rgba(239, 68, 68, 0.15)"
-                      iconBg="bg-rose-500/5 dark:bg-rose-500/10 text-rose-500 shadow-[0_0_15px_rgba(239,68,68,0.05)]"
+                      iconBg="bg-rose-500/5 dark:bg-rose-500/10 text-rose-500"
                       icon={<FiAlertTriangle className="h-5 w-5" />}
                       valueClassName="text-rose-600 dark:text-rose-400"
                     />
@@ -531,9 +525,9 @@ export default function CRUDPage({
                       value={toPersianNumber(productStats.lowStock)}
                       loading={loading}
                       glowColor="rgba(245, 158, 11, 0.15)"
-                      iconBg="bg-amber-500/5 dark:bg-amber-500/10 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.05)]"
+                      iconBg="bg-amber-500/5 dark:bg-amber-500/10 text-amber-500"
                       icon={<FiInfo className="h-5 w-5" />}
-                      valueClassName="text-amber-500 dark:text-amber-450"
+                      valueClassName="text-amber-500"
                     />
                   </>
                 ) : (
@@ -543,7 +537,7 @@ export default function CRUDPage({
                       value={toPersianNumber(total)}
                       loading={loading}
                       glowColor="rgba(99, 102, 241, 0.15)"
-                      iconBg="bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.05)]"
+                      iconBg="bg-indigo-500/5 dark:bg-indigo-500/10 text-indigo-500"
                       icon={<FiDatabase className="h-5 w-5" />}
                     />
                     <StatCard
@@ -551,7 +545,7 @@ export default function CRUDPage({
                       value={toPersianNumber(data.length)}
                       loading={loading}
                       glowColor="rgba(16, 185, 129, 0.15)"
-                      iconBg="bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.05)]"
+                      iconBg="bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-500"
                       icon={<FiList className="h-5 w-5" />}
                     />
 
@@ -573,12 +567,10 @@ export default function CRUDPage({
                 )}
               </div>
 
-              {/* نوار فیلتر */}
               <div className="w-full">
                 <GenericFilterBar fields={enrichedFilterFields} filters={filters} onChange={setFilters} />
               </div>
 
-              {/* تگ‌های فیلترهای فعال */}
               <ActiveFilters
                 filters={filters}
                 filterFields={enrichedFilterFields}
@@ -587,20 +579,18 @@ export default function CRUDPage({
                 filterTranslations={filterTranslations}
               />
 
-              {/* اعلان بخش سطل زباله */}
               {showTrash && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2.5 p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-400/5 border border-amber-500/10 dark:border-amber-400/10 text-amber-600 dark:text-amber-450 text-xs sm:text-sm leading-relaxed"
+                  className="flex items-center gap-2.5 p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-400/5 border border-amber-500/10 text-amber-600 dark:text-amber-450 text-xs sm:text-sm"
                 >
                   <FiInfo className="h-4 w-4 shrink-0" />
-                  <span>شما در بخش زباله‌دان هستید. می‌توانید اطلاعات قدیمی را برای بازیابی به لیست اصلی "بازیابی" کرده یا آن‌ها را برای همیشه حذف کنید.</span>
+                  <span>شما در بخش زباله‌دان هستید. می‌توانید اطلاعات قدیمی را بازیابی یا به طور دائمی حذف کنید.</span>
                 </motion.div>
               )}
 
-              {/* لیست نهایی داده‌ها */}
-              <div className="[&_thead_th]:text-center [&_thead_th]:justify-center [&_thead_th_div]:justify-center [&_tbody_td]:text-right">
+              
                 <CRUDList
                   columns={columns}
                   data={data}
@@ -616,9 +606,8 @@ export default function CRUDPage({
                   onPermanentDelete={showTrash ? (item) => showDeleteConfirm(item, true) : undefined}
                   hiddenOnMobile={hiddenOnMobile}
                 />
-              </div>
+              
 
-              {/* کارت‌های ناوبری پایینی مخصوص دارک‌مود */}
               {model === "product" && (
                 <NavigationCards
                   categoriesCount={categoriesCount}
@@ -629,7 +618,6 @@ export default function CRUDPage({
             </motion.div>
           )}
 
-          {/* فرم ایجاد / ویرایش */}
           {(mode === "create" || mode === "edit") && (
             <motion.div
               key="form"
@@ -653,10 +641,8 @@ export default function CRUDPage({
           )}
         </AnimatePresence>
 
-        {/* دکمه راهنمای میانبرها */}
         <KeyboardHelpLegend />
 
-        {/* جعبه میانبرهای پیشرفته کلاینت */}
         <AnimatePresence>
           <CommandPalette
             isOpen={showPalette}
@@ -669,7 +655,6 @@ export default function CRUDPage({
             inputRef={paletteInputRef}
           />
         </AnimatePresence>
-
       </div>
     </div>
   );

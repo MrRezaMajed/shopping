@@ -1,20 +1,30 @@
-// مدیریت و گالری تصاویر چندگانه محصول
+"use client";
 
-import React, { useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import Image from "next/image";
 import { useFormikContext } from "formik";
 import { FiImage, FiUpload, FiStar, FiTrash2 } from "react-icons/fi";
+import { AnimatePresence } from "framer-motion";
 import { SectionPanel } from "./SectionPanel";
 import { EmptyState } from "./EmptyState";
-import { readFileAsDataURL } from "./utils";
+import ImageCropperModal from "../ImageCropper/ImageCropperModal";
 
 interface ImagesManagerProps {
   name: string;
 }
 
+interface CropQueueItem {
+  file: File;
+  previewUrl: string;
+}
+
 export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesManagerProps) {
   const { values, setFieldValue } = useFormikContext<any>();
   const images: any[] = values[name] || [];
+
+  // صف‌بندی هوشمند کلاینت برای تصاویری که در صفِ کراپ کردن قرار دارند
+  const [cropQueue, setCropQueue] = useState<CropQueueItem[]>([]);
+  const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
 
   const handleUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,18 +32,60 @@ export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesM
       if (!fileList || fileList.length === 0) return;
 
       const files = Array.from(fileList);
-      const urls = await Promise.all(files.map(readFileAsDataURL));
-      const newItems = files.map((file, i) => ({
-        url: urls[i],
-        isMain: images.length === 0 && i === 0,
+      
+      // ساخت لیست تصاویر خام انتخابی برای صف برش
+      const queueItems = files.map((file) => ({
         file,
+        previewUrl: URL.createObjectURL(file),
       }));
 
-      setFieldValue(name, [...images, ...newItems]);
+      setCropQueue(queueItems);
+      setCurrentQueueIndex(0); // شروع پروسه برش از اولین عکسِ صف
       e.target.value = "";
     },
-    [images, name, setFieldValue]
+    []
   );
+
+  const handleCroppedItem = (croppedFile: File) => {
+    // ایجاد ساختار نهایی گالری متناسب با عکس اصلاح شده
+    const croppedUrl = URL.createObjectURL(croppedFile);
+    const newGalleryItem = {
+      url: croppedUrl,
+      isMain: images.length === 0, // اگر اولین عکس گالری بود، عکس اصلی شود
+      file: croppedFile,
+    };
+
+    // اضافه کردن آیتم به تصاویر فرم گالری
+    setFieldValue(name, [...images, newGalleryItem]);
+
+    // آزادسازی منابع موقتی عکس قبلی صف
+    if (cropQueue[currentQueueIndex]) {
+      URL.revokeObjectURL(cropQueue[currentQueueIndex].previewUrl);
+    }
+
+    // هدایت سیستم به عکس بعدی صف
+    if (currentQueueIndex < cropQueue.length - 1) {
+      setCurrentQueueIndex((prev) => prev + 1);
+    } else {
+      // اتمام صف‌بندی و بستن مودال‌ها
+      setCropQueue([]);
+      setCurrentQueueIndex(-1);
+    }
+  };
+
+  const handleCancelCrop = () => {
+    // لغو برش عکس فعلی و انتقال به عکس بعدی صف
+    if (cropQueue[currentQueueIndex]) {
+      URL.revokeObjectURL(cropQueue[currentQueueIndex].previewUrl);
+    }
+
+    if (currentQueueIndex < cropQueue.length - 1) {
+      setCurrentQueueIndex((prev) => prev + 1);
+    } else {
+      setCropQueue([]);
+      setCurrentQueueIndex(-1);
+    }
+  };
 
   const handleRemove = useCallback(
     (idx: number) => {
@@ -54,11 +106,13 @@ export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesM
     [images, name, setFieldValue]
   );
 
+  const activeCropItem = currentQueueIndex !== -1 ? cropQueue[currentQueueIndex] : null;
+
   return (
     <SectionPanel icon={<FiImage className="w-4 h-4" />} title="گالری تصاویر محصول" accent="sky">
-      <label className="flex flex-col items-center gap-2 p-5 border-2 border-dashed rounded-xl border-slate-200 dark:border-[#1f2235]/50 cursor-pointer hover:border-sky-400 dark:hover:border-sky-500/40 hover:bg-sky-50/40 dark:hover:bg-sky-500/5 transition">
+      <label className="flex flex-col items-center gap-2 p-5 border-2 border-dashed rounded-xl border-slate-200 dark:border-[#1f2235]/50 cursor-pointer hover:border-sky-400 hover:bg-sky-50/40 transition">
         <FiUpload className="w-5 h-5 text-slate-400" />
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">انتخاب و آپلود چندین تصویر</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">انتخاب و بهینه‌سازی گروهی تصاویر گالری</span>
         <input type="file" multiple accept="image/*" className="hidden" onChange={handleUpload} />
       </label>
 
@@ -94,6 +148,21 @@ export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesM
           ))}
         </div>
       )}
+
+      {/* سیستم هوشمند صف‌بندی برش گالری کالاها (به صورت مربع ۱:۱ استاندارد محصولات) */}
+      <AnimatePresence>
+        {activeCropItem && (
+          <ImageCropperModal
+            key={currentQueueIndex}
+            imageSrc={activeCropItem.previewUrl}
+            aspectRatio={1 / 1} // ابعاد مربع ۱:۱ برای گالری محصولات
+            targetWidth={800} // سایز بهینه ۸۰۰ پیکسلی
+            title={`برش و فشرده‌سازی تصویر گالری (${toPersianNumber(currentQueueIndex + 1)} از ${toPersianNumber(cropQueue.length)})`}
+            onCrop={handleCroppedItem}
+            onCancel={handleCancelCrop}
+          />
+        )}
+      </AnimatePresence>
     </SectionPanel>
   );
 });

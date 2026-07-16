@@ -1,4 +1,3 @@
-// app/actions/crud/write.ts
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -7,6 +6,14 @@ import { modelMap, ModelKey, CRUDItemInput } from "./types";
 import { sanitizeData, cleanAndParseNumber, handleFileUpload, serializeDecimal } from "./helpers";
 import { getRelationIncludes } from "./helpers";
 
+interface VariantPriceUpdate {
+  id: number;
+  price: number;
+}
+
+/**
+ * ایجاد آیتم جدید در دیتابیس (محصول و روابط آن یا مدل‌های ساده)
+ */
 export async function createItem(model: ModelKey, data: CRUDItemInput) {
   try {
     const db = modelMap[model];
@@ -29,7 +36,6 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
         sanitizedData.slug = generateSlug(sanitizedData.title);
       }
 
-      // استفاده از تراکنش برای تضمین ثبت کامل یا لغو کامل در صورت بروز خطا
       const fullProduct = await prisma.$transaction(async (tx) => {
         const product = await tx.product.create({
           data: {
@@ -95,7 +101,6 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
           }
         }
 
-        // دریافت اطلاعات محصول کامل شده با روابط درون تراکنش
         return await tx.product.findUnique({
           where: { id: product.id },
           include: getRelationIncludes("product", false),
@@ -105,7 +110,6 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
       return { success: true, data: serializeDecimal(fullProduct) };
     }
 
-    // ایجاد رکوردهای ساده (مانند برند، دسته‌بندی و بنر) بدون نیاز به تراکنش سنگین
     const item = await db.create({
       data: {
         ...sanitizedData,
@@ -120,6 +124,9 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
   }
 }
 
+/**
+ * ویرایش اطلاعات آیتم موجود در دیتابیس
+ */
 export async function updateItem(model: ModelKey, id: number, data: CRUDItemInput) {
   try {
     const db = modelMap[model];
@@ -142,7 +149,6 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
       delete sanitizedData.price;
       delete sanitizedData.stock;
 
-      // اجرای تراکنش برای آپدیت محصول تا در صورت خطا، اطلاعات قبلی حذف نشوند
       await prisma.$transaction(async (tx) => {
         const updated = await tx.product.updateMany({
           where: { id, softDeletedAt: null },
@@ -231,7 +237,6 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
       return { success: true };
     }
 
-    // آپدیت رکوردهای ساده
     const updated = await db.updateMany({
       where: { id, softDeletedAt: null },
       data: sanitizedData,
@@ -244,6 +249,37 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
     return { success: true };
   } catch (err: any) {
     console.error("updateItem error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * بروزرسانی تراکنشی قیمت‌های تنوع‌های مختلف یک کالا (Inline Edit)
+ */
+export async function quickUpdateVariantPrices(
+  productId: number,
+  updates: VariantPriceUpdate[]
+) {
+  try {
+    if (!updates || updates.length === 0) {
+      throw new Error("لیست تغییرات قیمت خالی است");
+    }
+
+    // تغییر تراکنشی قیمت تمام تنوع‌ها به صورت همزمان
+    await prisma.$transaction(
+      updates.map((update) =>
+        prisma.productVariant.update({
+          where: { id: update.id },
+          data: {
+            price: update.price,
+          },
+        })
+      )
+    );
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("quickUpdateVariantPrices error:", err);
     return { success: false, error: err.message };
   }
 }

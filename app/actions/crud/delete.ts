@@ -1,20 +1,43 @@
-// فرآیندهای حذف و بازیابی داده‌ها
 "use server";
 
 import { prisma } from "@/lib/prisma";
 import { modelMap, ModelKey, enumFields } from "./types";
+import { logActivity } from "../audit/log";
 
+
+/**
+ * حذف فیزیکی یا منطقی (Soft Delete) آیتم‌ها
+ */
 export async function deleteItem(model: ModelKey, id: number, permanent: boolean = false) {
+  console.log("🔵 [deleteItem] تابع حذف فراخوانی شد | مدل:", model, "| شناسه:", id, "| حذف دائمی:", permanent);
+
   try {
     const db = modelMap[model];
     if (!db) throw new Error(`Model "${model}" not found`);
 
     const itemId = Number(id);
 
+    // استخراج عنوان یا نام آیتم قبل از حذف شدن از پایگاه داده
+    const targetName = await getItemDisplayName(model, itemId);
+
     if (permanent) {
       await db.delete({
         where: { id: itemId },
       });
+
+      console.log("🟢 [deleteItem] حذف فیزیکی/دائمی از دیتابیس با موفقیت انجام شد.");
+      console.log("🟡 [deleteItem] در حال تلاش برای ثبت لاگ حذف دائمی...");
+
+      // ثبت لاگ حذف دائمی با نام گزینه به جای آیدی
+      await logActivity({
+        action: "DELETE",
+        modelName: model,
+        recordId: itemId,
+        targetName: targetName, // ارسال عنوان آیتم حذف شده
+        details: `آیتم «${targetName}» از بخش مربوطه به طور کامل و برای همیشه از دیتابیس حذف شد.`,
+      });
+
+      console.log("✅ [deleteItem] لاگ حذف دائمی با موفقیت ثبت شد.");
       return { success: true };
     }
 
@@ -80,16 +103,38 @@ export async function deleteItem(model: ModelKey, id: number, permanent: boolean
       });
     }
 
+    console.log("🟢 [deleteItem] حذف نرم (Soft Delete) از دیتابیس با موفقیت انجام شد.");
+    console.log("🟡 [deleteItem] در حال تلاش برای ثبت لاگ حذف نرم...");
+
+    // ثبت لاگ انتقال به سطل زباله همراه با نام گزینه
+    await logActivity({
+      action: "DELETE",
+      modelName: model,
+      recordId: itemId,
+      targetName: targetName, // ارسال عنوان آیتم منتقل شده به زباله‌دان
+      details: `آیتم «${targetName}» به سطل زباله بخش مدیریت منتقل شد.`,
+    });
+
+    console.log("✅ [deleteItem] لاگ حذف نرم با موفقیت ثبت شد.");
     return { success: true };
   } catch (err: any) {
+    console.log("🔴 [deleteItem] خطا در اجرای فرآیند حذف رخ داد:", err.message);
     console.error("deleteItem error:", err);
     return { success: false, error: err.message };
   }
 }
 
+/**
+ * بازیابی آیتم‌ها از سطل زباله (Restore)
+ */
 export async function restoreItem(model: ModelKey, id: number) {
+  console.log("🔵 [restoreItem] تابع بازیابی فراخوانی شد | مدل:", model, "| شناسه:", id);
+
   try {
     const itemId = Number(id);
+    
+    // استخراج عنوان یا نام آیتم قبل از بازگردانی
+    const targetName = await getItemDisplayName(model, itemId);
 
     if (model === "product") {
       await prisma.$transaction(async (tx) => {
@@ -154,9 +199,53 @@ export async function restoreItem(model: ModelKey, id: number) {
       }
     }
 
+    console.log("🟢 [restoreItem] عملیات بازیابی در دیتابیس با موفقیت انجام شد.");
+    console.log("🟡 [restoreItem] در حال تلاش برای ثبت لاگ بازیابی...");
+
+    // ثبت لاگ بازیابی موفقیت‌آمیز رویداد با نام حقیقی گزینه
+    await logActivity({
+      action: "RESTORE",
+      modelName: model,
+      recordId: itemId,
+      targetName: targetName, // ارسال عنوان بازیابی شده
+      details: `آیتم «${targetName}» با موفقیت از زباله‌دان بازیابی و به سیستم بازگردانده شد.`,
+    });
+
+    console.log("✅ [restoreItem] لاگ بازیابی با موفقیت ثبت شد.");
     return { success: true };
   } catch (err: any) {
+    console.log("🔴 [restoreItem] خطا در اجرای فرآیند بازیابی رخ داد:", err.message);
     console.error("restoreItem error:", err);
     return { success: false, error: err.message };
+  }
+}
+
+
+/**
+ * تابع کمکی برای استخراج نام یا عنوان فارسی آیتم قبل از ثبت لاگ تغییرات
+ */
+async function getItemDisplayName(model: ModelKey, id: number): Promise<string> {
+  try {
+    const db = modelMap[model];
+    if (!db) return `شناسه ${id}`;
+
+    // تشخیص دقیق نام فیلد (محصول و بنر "title" دارند و برند و دسته‌بندی "name")
+    const isTitleModel = model === "product" || model === "banner";
+    const selectField = isTitleModel ? "title" : "name";
+
+    const item = await (db as any).findUnique({
+      where: { id },
+      select: {
+        [selectField]: true, // 👈 اصلاح شد: فقط فیلد فعال به عنوان true فرستاده می‌شود
+      },
+    });
+
+    if (item) {
+      return item[selectField] || `شناسه ${id}`;
+    }
+    return `شناسه ${id}`;
+  } catch (err) {
+    console.error("Error in getItemDisplayName:", err);
+    return `شناسه ${id}`;
   }
 }

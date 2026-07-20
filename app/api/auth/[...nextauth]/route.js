@@ -1,9 +1,13 @@
-import GoogleProvider  from "next-auth/providers/google";
-import GithubProvider from "next-auth/providers/github"
+import GoogleProvider from "next-auth/providers/google";
+import GithubProvider from "next-auth/providers/github";
 import NextAuth from "next-auth";
+import { PrismaAdapter } from "@next-auth/prisma-adapter"; // 👈 آداپتور رسمی پریزما
+import { prisma } from "@/lib/prisma"; // 👈 نمونه اتصال پریزما پروژه شما
 
+export const authOptions = { // 👈 تعیین نوع `: any` برای هماهنگی با جاوااسکریپت حذف شد
+  // 👈 این خط را برای ذخیره خودکار کاربران در دیتابیس فعال کنید
+  adapter: PrismaAdapter(prisma), 
 
-export const authOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -14,19 +18,21 @@ export const authOptions = {
       clientSecret: process.env.GITHUB_SECRET,
     }),
   ],
-  session:{
-    strategy: "jwt",
+  session: {
+    strategy: "jwt", // استفاده هوشمندانه از JWT برای مدیریت سریع نشست‌ها
   },
-  callbacks:{
-    async jwt({ token, user }) {
+  callbacks: {
+    async jwt({ token, user }) { // 👈 تایپ‌های اضافی حذف شدند
       if (user) {
-        token.id = user.id
+        token.id = user.id;
       }
-      return token
+      return token;
     },
-    async session({ session, token }) {
-      session.user.id = token.id
-      return session
+    async session({ session, token }) { // 👈 تایپ‌های اضافی حذف شدند
+      if (session?.user) {
+        session.user.id = token.id;
+      }
+      return session;
     },
   },
 };

@@ -6,9 +6,12 @@ import { AccentColorPicker } from "./common/AccentColorPicker";
 import NotificationDropdown from "./header/NotificationDropdown";
 import UserDropdown from "./header/UserDropdown";
 import { useSidebar } from "../../context/SidebarContext";
+import { useTheme } from "../../context/ThemeContext";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+
+type Accent = "indigo" | "emerald" | "rose" | "amber";
 
 const hamburgerVariants = {
   top: { closed: { d: "M 4 6 L 20 6" }, open: { d: "M 5 5 L 19 19" } },
@@ -21,9 +24,34 @@ const chevronVariants = {
   collapsed: { d: "M 14 6 L 8 12 L 14 18" }
 };
 
+// استفاده از کدهای رنگی انتخابگر برای ساختار افکت‌های دکمه‌ها و فوکوس ورودی هدر
+const headerAccentStyles: Record<Accent, { text: string; buttonHover: string; inputFocus: string }> = {
+  indigo: {
+    text: "text-[#465fff]",
+    buttonHover: "hover:border-[#465fff]/40 dark:hover:border-[#465fff]/30 hover:text-[#465fff] dark:hover:text-[#465fff] hover:shadow-[0_0_15px_rgba(70,95,255,0.12)]",
+    inputFocus: "focus:border-[#465fff] focus:ring-[#465fff]/10"
+  },
+  emerald: {
+    text: "text-[#10b981]",
+    buttonHover: "hover:border-[#10b981]/40 dark:hover:border-[#10b981]/30 hover:text-[#10b981] dark:hover:text-[#10b981] hover:shadow-[0_0_15px_rgba(16,185,129,0.12)]",
+    inputFocus: "focus:border-[#10b981] focus:ring-[#10b981]/10"
+  },
+  rose: {
+    text: "text-[#f43f5e]",
+    buttonHover: "hover:border-[#f43f5e]/40 dark:hover:border-[#f43f5e]/30 hover:text-[#f43f5e] dark:hover:text-[#f43f5e] hover:shadow-[0_0_15px_rgba(244,63,94,0.12)]",
+    inputFocus: "focus:border-[#f43f5e] focus:ring-[#f43f5e]/10"
+  },
+  amber: {
+    text: "text-[#f59e0b]",
+    buttonHover: "hover:border-[#f59e0b]/40 dark:hover:border-[#f59e0b]/30 hover:text-[#f59e0b] dark:hover:text-[#f59e0b] hover:shadow-[0_0_15px_rgba(245,158,11,0.12)]",
+    inputFocus: "focus:border-[#f59e0b] focus:ring-[#f59e0b]/10"
+  }
+};
+
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState<boolean>(false);
   const { isExpanded, isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { accent } = useTheme();
   const [mounted, setMounted] = useState(false);
   
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,14 +72,16 @@ const AppHeader: React.FC = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
 
+  const styles = headerAccentStyles[accent as Accent] || headerAccentStyles.indigo;
+
   return (
     <header className="sticky top-0 flex w-full bg-white/80 dark:bg-[#090a10]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-[#1f2235]/40 z-45">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-slate-200 dark:border-[#1f2235]/40 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           
-          {/* دکمه ناوبری موبایل با استایل داینامیک */}
+          {/* دکمه موبایل */}
           <button
-            className="flex lg:hidden items-center justify-center w-10 h-10 rounded-xl z-50 bg-white/20 dark:bg-[#121420]/30 backdrop-blur-md text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#1f2235]/50 hover:border-brand-500/40 dark:hover:border-brand-500/50 hover:text-brand-600 dark:hover:text-brand-400 hover:shadow-[0_0_15px_var(--brand-500)]/15 transition-all duration-300 shrink-0"
+            className={`flex lg:hidden items-center justify-center w-10 h-10 rounded-xl z-50 bg-white/20 dark:bg-[#121420]/30 backdrop-blur-md text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#1f2235]/50 transition-all duration-300 shrink-0 ${styles.buttonHover}`}
             onClick={handleToggle}
             aria-label="تغییر وضعیت منوی موبایل"
             type="button"
@@ -87,9 +117,9 @@ const AppHeader: React.FC = () => {
             </motion.svg>
           </button>
 
-          {/* دکمه دسکتاپ با استایل داینامیک */}
+          {/* دکمه دسکتاپ */}
           <button
-            className="hidden lg:flex items-center justify-center h-11 w-11 rounded-xl z-50 bg-white/20 dark:bg-[#121420]/30 backdrop-blur-md text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#1f2235]/50 hover:border-brand-500/40 dark:hover:border-brand-500/50 hover:text-brand-600 dark:hover:text-brand-400 hover:shadow-[0_0_15px_var(--brand-500)]/15 transition-all duration-300 shrink-0"
+            className={`hidden lg:flex items-center justify-center h-11 w-11 rounded-xl z-50 bg-white/20 dark:bg-[#121420]/30 backdrop-blur-md text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#1f2235]/50 transition-all duration-300 shrink-0 ${styles.buttonHover}`}
             onClick={handleToggle}
             aria-label="تغییر وضعیت سایدبار دسکتاپ"
             type="button"
@@ -106,12 +136,12 @@ const AppHeader: React.FC = () => {
             </svg>
           </button>
 
-          {/* متن برند با رنگ‌مایه داینامیک */}
+          {/* متن برند */}
           <Link href="/dashboard" className="lg:hidden">
-            <span className="text-brand-500 font-extrabold text-sm">پنل آمازون</span>
+            <span className={`${styles.text} font-extrabold text-sm`}>پنل آمازون</span>
           </Link>
 
-          {/* دکمه منوی موبایل (سه نقطه) با مسیر SVG تصحیح‌شده و دقیق */}
+          {/* منوی موبایل (سه نقطه) */}
           <button onClick={toggleApplicationMenu} className="flex items-center justify-center w-10 h-10 text-slate-700 rounded-lg z-50 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-[#121420] lg:hidden" type="button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path 
@@ -126,7 +156,7 @@ const AppHeader: React.FC = () => {
           <div className="hidden lg:block">
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="relative">
-                <span className="absolute -translate-y-1/2 left-4 top-1/2 pointer-events-none">
+                <span className="absolute -translate-y-1/2 left-4 top-1/4 pointer-events-none">
                   <svg className="fill-slate-500 dark:fill-slate-400" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fillRule="evenodd" clipRule="evenodd" d="M3.04175 9.37363C3.04175 5.87693 5.87711 3.04199 9.37508 3.04199C12.8731 3.04199 15.7084 5.87693 15.7084 9.37363C15.7084 12.8703 12.8731 15.7053 9.37508 15.7053C5.87711 15.7053 3.04175 12.8703 3.04175 9.37363ZM9.37508 1.54199C5.04902 1.54199 1.54175 5.04817 1.54175 9.37363C1.54175 13.6991 5.04902 17.2053 9.37508 17.2053C11.2674 17.2053 13.003 16.5344 14.357 15.4176L17.177 18.238C17.4699 18.5309 17.9448 18.5309 18.2377 18.238C18.5306 17.9451 18.5306 17.4703 18.2377 17.1774L15.418 14.3573C16.5365 13.0033 17.2084 11.2669 17.2084 9.37363C17.2084 5.04817 13.7011 1.54199 9.37508 1.54199Z" />
                   </svg>
@@ -135,12 +165,8 @@ const AppHeader: React.FC = () => {
                   ref={inputRef} 
                   type="text" 
                   placeholder="جستجو یا وارد کردن دستور..." 
-                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50/50 py-2.5 pl-12 pr-14 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-400 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-[#1f2235]/65 dark:bg-[#121420]/60 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-brand-500 xl:w-[430px]" 
+                  className={`h-11 w-full rounded-lg border border-slate-200 bg-slate-50/50 py-2.5 pr-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-3 dark:border-[#1f2235]/65 dark:bg-[#121420]/60 dark:text-white dark:placeholder:text-slate-500 xl:w-[430px] ${styles.inputFocus}`} 
                 />
-                <button className="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-100 px-[7px] py-[4.5px] text-xs text-slate-500 dark:border-[#1f2235]/80 dark:bg-[#1b1e30] dark:text-slate-400" type="button">
-                  <span> ⌘ </span>
-                  <span> K </span>
-                </button>
               </div>
             </form>
           </div>

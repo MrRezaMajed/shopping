@@ -5,11 +5,14 @@ import { generateSlug } from "@/lib/slug/generateSlug";
 import { modelMap, ModelKey, CRUDItemInput } from "./types";
 import { sanitizeData, cleanAndParseNumber, handleFileUpload, serializeDecimal } from "./helpers";
 import { getRelationIncludes } from "./helpers";
+import { logActivity } from "../audit/log";
 
 interface VariantPriceUpdate {
   id: number;
   price: number;
 }
+
+
 
 /**
  * ایجاد آیتم جدید در دیتابیس (محصول و روابط آن یا مدل‌های ساده)
@@ -107,14 +110,37 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
         });
       });
 
+      const targetTitle = sanitizedData.title;
+
+      // ثبت لاگ مربوط به ایجاد محصول موفقیت‌آمیز همراه با نام کالا
+      await logActivity({
+        action: "CREATE",
+        modelName: "Product",
+        recordId: fullProduct?.id || null,
+        targetName: targetTitle, // ارسال عنوان محصول
+        details: `محصول جدید با عنوان «${targetTitle}» توسط مدیریت در سیستم ثبت گردید.`,
+      });
+
       return { success: true, data: serializeDecimal(fullProduct) };
     }
 
+    // ثبت مدل‌های ساده‌تر غیر از محصول
     const item = await db.create({
       data: {
         ...sanitizedData,
         softDeletedAt: null,
       },
+    });
+
+    const targetName = sanitizedData.title || sanitizedData.name || "نامشخص";
+
+    // ثبت لاگ مربوط به ایجاد سایر مدل‌ها (برند، دسته‌بندی و بنر) همراه با نام یا عنوان
+    await logActivity({
+      action: "CREATE",
+      modelName: model,
+      recordId: item.id,
+      targetName: targetName, // ارسال نام برند یا دسته‌بندی یا بنر
+      details: `یک رکورد جدید در بخش ${model} با نام «${targetName}» با موفقیت اضافه شد.`,
     });
 
     return { success: true, data: serializeDecimal(item) };
@@ -131,6 +157,9 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
   try {
     const db = modelMap[model];
     if (!db) throw new Error(`Model "${model}" not found`);
+
+    // استخراج عنوان یا نام آیتم پیش از اعمال تغییرات
+    const targetName = await getItemDisplayName(model, id);
 
     const sanitizedData = await sanitizeData(model, data);
 
@@ -234,9 +263,19 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
         }
       });
 
+      // ثبت لاگ مربوط به ویرایش محصول با ذکر عنوان آن کالا
+      await logActivity({
+        action: "UPDATE",
+        modelName: "Product",
+        recordId: id,
+        targetName: targetName, // ارسال عنوان کالا
+        details: `اطلاعات و تنوع‌های مربوط به محصول «${targetName}» ویرایش و به‌روزرسانی شد.`,
+      });
+
       return { success: true };
     }
 
+    // ثبت مدل‌های ساده غیر از کالا
     const updated = await db.updateMany({
       where: { id, softDeletedAt: null },
       data: sanitizedData,
@@ -245,6 +284,15 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
     if (updated.count === 0) {
       return { success: false, error: "Record not found or deleted" };
     }
+
+    // ثبت لاگ تغییر سایر مدل‌ها (برند، دسته یا بنر) همراه با ذکر نام آن گزینه
+    await logActivity({
+      action: "UPDATE",
+      modelName: model,
+      recordId: id,
+      targetName: targetName, // ارسال نام برند یا دسته‌بندی تغییر یافته
+      details: `آیتم «${targetName}» در بخش ${model} ویرایش و به‌روزرسانی شد.`,
+    });
 
     return { success: true };
   } catch (err: any) {
@@ -265,7 +313,13 @@ export async function quickUpdateVariantPrices(
       throw new Error("لیست تغییرات قیمت خالی است");
     }
 
-    // تغییر تراکنشی قیمت تمام تنوع‌ها به صورت همزمان
+    // دریافت نام کالا برای ثبت دقیق لاگ فعالیت
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { title: true },
+    });
+    const targetName = product?.title || `شناسه ${productId}`;
+
     await prisma.$transaction(
       updates.map((update) =>
         prisma.productVariant.update({
@@ -277,9 +331,47 @@ export async function quickUpdateVariantPrices(
       )
     );
 
+    // ثبت لاگ ویرایش سریع قیمت‌ها با نمایش نام کالا
+    await logActivity({
+      action: "UPDATE",
+      modelName: "Product",
+      recordId: productId,
+      targetName: targetName, // ارسال عنوان کالا
+      details: `قیمت‌های مربوط به تنوع‌های محصول «${targetName}» به صورت ویرایش سریع به‌روزرسانی شد.`,
+    });
+
     return { success: true };
   } catch (err: any) {
     console.error("quickUpdateVariantPrices error:", err);
     return { success: false, error: err.message };
+  }
+}
+
+/**
+ * تابع کمکی برای استخراج نام یا عنوان فارسی آیتم قبل از ثبت لاگ تغییرات
+ */
+async function getItemDisplayName(model: ModelKey, id: number): Promise<string> {
+  try {
+    const db = modelMap[model];
+    if (!db) return `شناسه ${id}`;
+
+    // تشخیص دقیق نام فیلد (محصول و بنر "title" دارند و برند و دسته‌بندی "name")
+    const isTitleModel = model === "product" || model === "banner";
+    const selectField = isTitleModel ? "title" : "name";
+
+    const item = await (db as any).findUnique({
+      where: { id },
+      select: {
+        [selectField]: true, // 👈 اصلاح شد: فقط فیلد فعال به عنوان true فرستاده می‌شود
+      },
+    });
+
+    if (item) {
+      return item[selectField] || `شناسه ${id}`;
+    }
+    return `شناسه ${id}`;
+  } catch (err) {
+    console.error("Error in getItemDisplayName:", err);
+    return `شناسه ${id}`;
   }
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { Pencil, Trash2, RotateCcw, Trash } from "lucide-react";
+import { FiEdit3, FiTrash2, FiRotateCcw, FiTrash } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { toPersianNumber } from "@/lib/utils/persianNumbers";
 import { Column } from "./types";
@@ -124,7 +124,7 @@ function CRUDListRowInner<T extends { id: number }>({
               kind="edit"
               title="ویرایش"
               onClick={() => onEdit(item)}
-              icon={<Pencil className="w-3.5 h-3.5" />}
+              icon={<FiEdit3 className="w-3.5 h-3.5" />}
             />
           )}
           {onRestore && (
@@ -132,7 +132,7 @@ function CRUDListRowInner<T extends { id: number }>({
               kind="restore"
               title="بازگردانی"
               onClick={() => onRestore(item)}
-              icon={<RotateCcw className="w-3.5 h-3.5" />}
+              icon={<FiRotateCcw className="w-3.5 h-3.5" />}
             />
           )}
           {onDelete && (
@@ -140,7 +140,7 @@ function CRUDListRowInner<T extends { id: number }>({
               kind="delete"
               title="حذف موقت"
               onClick={() => onDelete(item)}
-              icon={<Trash2 className="w-3.5 h-3.5" />}
+              icon={<FiTrash2 className="w-3.5 h-3.5" />}
             />
           )}
           {onPermanentDelete && (
@@ -148,7 +148,7 @@ function CRUDListRowInner<T extends { id: number }>({
               kind="permanent"
               title="حذف دائمی"
               onClick={() => onPermanentDelete(item)}
-              icon={<Trash className="w-3.5 h-3.5" />}
+              icon={<FiTrash className="w-3.5 h-3.5" />}
             />
           )}
         </div>

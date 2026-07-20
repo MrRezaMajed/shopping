@@ -1,0 +1,14 @@
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     // شناسه کاربری که اقدام را انجام داده (null برای سیستم)
+  action      String   // نوع اقدام: CREATE | UPDATE | DELETE | RESTORE | SYSTEM_AUTO
+  modelName   String   // نام مدل: Product | Category | Brand | Banner
+  targetName  String?
+  recordId    Int?     // شناسه رکورد ویرایش‌شده
+  details     String   // جزئیات فارسی لاگ
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}

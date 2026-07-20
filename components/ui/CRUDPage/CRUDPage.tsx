@@ -15,7 +15,6 @@ import CRUDList from "@/components/ui/CRUDList/CRUDList";
 import CRUDEditForm from "@/components/ui/CRUDEditForm/CRUDEditForm";
 import StatusToggle from "@/components/ui/DataTable/StatusToggle";
 import GenericFilterBar from "@/components/ui/GenericFilterBar/GenericFilterBar";
-import { Button } from "@/components/ui/Button";
 import { toPersianNumber } from "@/lib/utils/persianNumbers";
 import { useCRUD } from "./hooks/useCRUD";
 import { CRUDPageProps } from "./types";

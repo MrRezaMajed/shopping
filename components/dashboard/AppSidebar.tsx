@@ -1,22 +1,25 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
-import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-} from "@/icons/index";
+import { useTheme } from "@/context/ThemeContext"; // ایمپورت هوک تم
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  FiGrid, 
+  FiCalendar, 
+  FiUser, 
+  FiList, 
+  FiCheckSquare, 
+  FiFileText, 
+  FiPieChart, 
+  FiBox, 
+  FiLock, 
+  FiChevronDown,
+  FiMoreHorizontal
+} from "react-icons/fi";
+
+type Accent = "indigo" | "emerald" | "rose" | "amber";
 
 interface SubItem {
   name: string;
@@ -37,13 +40,9 @@ interface OpenSubmenu {
   index: number;
 }
 
-interface SubMenuHeight {
-  [key: string]: number;
-}
-
 const navItems: NavItem[] = [
   { 
-    icon: <Image src={GridIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiGrid className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     name: "محتوا", 
     subItems: [
       { name: "بنرها", path: "/dashboard/content/banners" },
@@ -53,28 +52,28 @@ const navItems: NavItem[] = [
     ] 
   },
   { 
-    icon: <Image src={CalenderIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiCalendar className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     name: "تقویم کاری", 
     path: "/calendar" 
   },
   { 
-    icon: <Image src={UserCircleIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiUser className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     name: "پروفایل من", 
     path: "/profile" 
   },
   { 
     name: "فرم‌ها", 
-    icon: <Image src={ListIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiList className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     subItems: [{ name: "فیلدهای ورودی", path: "/form-elements" }] 
   },
   { 
     name: "جدول‌ها", 
-    icon: <Image src={TableIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiCheckSquare className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     subItems: [{ name: "جدول ساده", path: "/basic-tables" }] 
   },
   { 
     name: "صفحات جانبی", 
-    icon: <Image src={PageIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiFileText className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     subItems: [
       { name: "صفحه خالی", path: "/blank" }, 
       { name: "خطای 404", path: "/error-404" }
@@ -84,7 +83,7 @@ const navItems: NavItem[] = [
 
 const othersItems: NavItem[] = [
   { 
-    icon: <Image src={PieChartIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiPieChart className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     name: "نمودارها", 
     subItems: [
       { name: "نمودار خطی", path: "/line-chart" }, 
@@ -92,7 +91,7 @@ const othersItems: NavItem[] = [
     ] 
   },
   { 
-    icon: <Image src={BoxCubeIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiBox className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     name: "رابط کاربری", 
     subItems: [
       { name: "هشدارها", path: "/alerts" }, 
@@ -101,7 +100,7 @@ const othersItems: NavItem[] = [
     ] 
   },
   { 
-    icon: <Image src={PlugInIcon} alt="" width={20} height={20} className="dark:invert" />, 
+    icon: <FiLock className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     name: "احراز هویت", 
     subItems: [
       { name: "ورود", path: "/signin" }, 
@@ -110,16 +109,78 @@ const othersItems: NavItem[] = [
   },
 ];
 
+// ساختار نگاشت رنگ سایدبار برای پوشش چهار رنگ فعال انتخابگر
+const sidebarAccentStyles: Record<Accent, {
+  activeMenu: string;
+  hoverMenu: string;
+  iconActive: string;
+  chevronActive: string;
+  activeSubmenu: string;
+  hoverSubmenu: string;
+  dotActive: string;
+  dotHover: string;
+  logoGradient: string;
+}> = {
+  indigo: {
+    activeMenu: "bg-indigo-500/10 dark:bg-indigo-500/[0.04] text-indigo-600 dark:!text-indigo-400 border-r-2 border-indigo-500 dark:border-indigo-400 font-extrabold shadow-sm dark:shadow-none",
+    hoverMenu: "text-slate-600 dark:!text-slate-300 hover:text-indigo-600 dark:hover:!text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20",
+    iconActive: "text-indigo-500",
+    chevronActive: "text-indigo-500",
+    activeSubmenu: "text-indigo-600 dark:!text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/30 border-r border-indigo-500 dark:border-indigo-400",
+    hoverSubmenu: "text-slate-500 dark:!text-slate-300 hover:text-indigo-600 dark:hover:!text-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20",
+    dotActive: "bg-indigo-500 dark:bg-indigo-400 scale-125 shadow-[0_0_8px_rgba(99,102,241,0.4)] dark:shadow-[0_0_12px_rgba(129,140,248,0.5)]",
+    dotHover: "bg-slate-300 dark:bg-slate-700 group-hover/sub:bg-indigo-500 dark:group-hover/sub:bg-indigo-400 group-hover/sub:scale-125",
+    logoGradient: "from-indigo-500 to-violet-400 dark:from-indigo-400 dark:to-violet-300"
+  },
+  emerald: {
+    activeMenu: "bg-emerald-500/10 dark:bg-emerald-500/[0.04] text-emerald-600 dark:!text-emerald-450 border-r-2 border-emerald-500 dark:border-emerald-400 font-extrabold shadow-sm dark:shadow-none",
+    hoverMenu: "text-slate-600 dark:!text-slate-300 hover:text-emerald-600 dark:hover:!text-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20",
+    iconActive: "text-emerald-500",
+    chevronActive: "text-emerald-500",
+    activeSubmenu: "text-emerald-600 dark:!text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/30 border-r border-emerald-500 dark:border-emerald-400",
+    hoverSubmenu: "text-slate-500 dark:!text-slate-300 hover:text-emerald-600 dark:hover:!text-emerald-400 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20",
+    dotActive: "bg-emerald-500 dark:bg-emerald-400 scale-125 shadow-[0_0_8px_rgba(16,185,129,0.4)] dark:shadow-[0_0_12px_rgba(52,211,153,0.5)]",
+    dotHover: "bg-slate-300 dark:bg-slate-700 group-hover/sub:bg-emerald-500 dark:group-hover/sub:bg-emerald-400 group-hover/sub:scale-125",
+    logoGradient: "from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300"
+  },
+  rose: {
+    activeMenu: "bg-rose-500/10 dark:bg-rose-500/[0.04] text-rose-600 dark:!text-rose-400 border-r-2 border-rose-500 dark:border-rose-400 font-extrabold shadow-sm dark:shadow-none",
+    hoverMenu: "text-slate-600 dark:!text-slate-300 hover:text-rose-600 dark:hover:!text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-950/20",
+    iconActive: "text-rose-500",
+    chevronActive: "text-rose-500",
+    activeSubmenu: "text-rose-600 dark:!text-rose-400 bg-rose-50/80 dark:bg-rose-950/30 border-r border-rose-500 dark:border-rose-400",
+    hoverSubmenu: "text-slate-500 dark:!text-slate-300 hover:text-rose-600 dark:hover:!text-rose-400 hover:bg-rose-50/30 dark:hover:bg-rose-950/20",
+    dotActive: "bg-rose-500 dark:bg-rose-400 scale-125 shadow-[0_0_8px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(251,113,133,0.5)]",
+    dotHover: "bg-slate-300 dark:bg-slate-700 group-hover/sub:bg-rose-500 dark:group-hover/sub:bg-rose-400 group-hover/sub:scale-125",
+    logoGradient: "from-rose-500 to-pink-400 dark:from-rose-400 dark:to-pink-300"
+  },
+  amber: {
+    activeMenu: "bg-amber-500/10 dark:bg-amber-500/[0.04] text-amber-600 dark:!text-amber-400 border-r-2 border-amber-500 dark:border-amber-400 font-extrabold shadow-sm dark:shadow-none",
+    hoverMenu: "text-slate-600 dark:!text-slate-300 hover:text-amber-600 dark:hover:!text-amber-400 hover:bg-amber-50/50 dark:hover:bg-amber-950/20",
+    iconActive: "text-amber-500",
+    chevronActive: "text-amber-500",
+    activeSubmenu: "text-amber-600 dark:!text-amber-400 bg-amber-50/80 dark:bg-amber-950/30 border-r border-amber-500 dark:border-amber-400",
+    hoverSubmenu: "text-slate-500 dark:!text-slate-300 hover:text-amber-600 dark:hover:!text-amber-400 hover:bg-amber-50/30 dark:hover:bg-amber-950/20",
+    dotActive: "bg-amber-500 dark:bg-amber-400 scale-125 shadow-[0_0_8px_rgba(245,158,11,0.4)] dark:shadow-[0_0_12px_rgba(251,191,36,0.5)]",
+    dotHover: "bg-slate-300 dark:bg-slate-700 group-hover/sub:bg-amber-500 dark:group-hover/sub:bg-amber-400 group-hover/sub:scale-125",
+    logoGradient: "from-amber-500 to-orange-400 dark:from-amber-400 dark:to-orange-300"
+  }
+};
+
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { accent } = useTheme(); // دریافت تم فعال
   const pathname = usePathname();
 
   const [openSubmenu, setOpenSubmenu] = useState<OpenSubmenu | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<SubMenuHeight>({});
-  const subMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+
+  const isAnySubItemActive = useCallback((subItems?: SubItem[]) => {
+    if (!subItems) return false;
+    return subItems.some(item => item.path === pathname);
+  }, [pathname]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -148,50 +209,54 @@ const AppSidebar: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prev) => ({ 
-          ...prev, 
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0 
-        }));
-      }
-    }
-  }, [openSubmenu]);
+  // دریافت استایل‌های هماهنگ با تم فعال
+  const styles = sidebarAccentStyles[accent as Accent] || sidebarAccentStyles.indigo;
 
-  const renderMenuItems = (navItems: NavItem[], menuType: string = "main") => (
-    <ul className="flex flex-col gap-5">
-      {navItems.map((nav, index) => {
+  const renderMenuItems = (itemsList: NavItem[], menuType: string = "main") => (
+    <ul className="flex flex-col gap-2">
+      {itemsList.map((nav, index) => {
         const hasSubmenu = !!nav.subItems;
         const isOpen = openSubmenu?.type === menuType && openSubmenu?.index === index;
+        const activeMenu = hasSubmenu ? isAnySubItemActive(nav.subItems) : (nav.path ? isActive(nav.path) : false);
 
         return (
           <li
             key={nav.name}
             onMouseEnter={() => hasSubmenu && handleMouseEnterSubmenu(index, menuType)}
             onMouseLeave={() => hasSubmenu && handleMouseLeaveSubmenu(index, menuType)}
+            className="relative"
           >
             {hasSubmenu ? (
               <div
                 onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`menu-item group flex cursor-pointer transition-all rounded-xl p-3 ${isOpen ? "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#121420]/50"}
-                  ${!isExpanded && !isMobile ? "lg:justify-center" : "lg:justify-start"}`}
+                className={`
+                  group flex items-center cursor-pointer transition-all duration-300 rounded-xl p-3 pr-3.5
+                  ${isOpen || activeMenu ? styles.activeMenu : styles.hoverMenu}
+                  ${!isExpanded && !isMobile ? "lg:justify-center" : "lg:justify-start"}
+                `}
               >
-                <span className={isOpen ? "text-indigo-500" : ""}>
+                <span className={`transition-all duration-300 ${isOpen || activeMenu ? styles.iconActive : ""}`}>
                   {nav.icon}
                 </span>
+
+                <AnimatePresence>
+                  {(isExpanded || isHovered || isMobileOpen) && (
+                    <motion.span
+                      initial={{ opacity: 0, x: 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 8 }}
+                      transition={{ duration: 0.2 }}
+                      className="font-extrabold text-xs pr-3 leading-6 whitespace-nowrap"
+                    >
+                      {nav.name}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text font-bold text-xs pr-3 leading-6">{nav.name}</span>
-                )}
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <Image 
-                    src={ChevronDownIcon} 
-                    alt="" 
-                    className={`mr-auto w-4 h-4 transition-transform duration-200 dark:invert
-                      ${isOpen ? "rotate-180" : ""}`} 
-                    width={16}
-                    height={16}
+                  <FiChevronDown 
+                    className={`mr-auto w-3.5 h-3.5 transition-all duration-350 opacity-70 group-hover:opacity-100
+                      ${isOpen ? `rotate-180 ${styles.chevronActive} opacity-100` : ""}`} 
                   />
                 )}
               </div>
@@ -199,43 +264,74 @@ const AppSidebar: React.FC = () => {
               nav.path && (
                 <Link 
                   href={nav.path} 
-                  className={`menu-item group flex transition-all rounded-xl p-3 ${isActive(nav.path) ? "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400" : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#121420]/50"}`}
+                  className={`
+                    group flex items-center transition-all duration-300 rounded-xl p-3 pr-3.5
+                    ${activeMenu ? styles.activeMenu : styles.hoverMenu}
+                  `}
                 >
-                  <span>
+                  <span className="transition-all duration-300">
                     {nav.icon}
                   </span>
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="menu-item-text font-bold text-xs pr-3 leading-6">{nav.name}</span>
-                  )}
+                  
+                  <AnimatePresence>
+                    {(isExpanded || isHovered || isMobileOpen) && (
+                      <motion.span
+                        initial={{ opacity: 0, x: 8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 8 }}
+                        transition={{ duration: 0.2 }}
+                        className="font-extrabold text-xs pr-3 leading-6 whitespace-nowrap"
+                      >
+                        {nav.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </Link>
               )
             )}
 
-            {hasSubmenu && (isExpanded || isHovered || isMobileOpen) && (
-              <div
-                ref={(el) => {
-                  subMenuRefs.current[`${menuType}-${index}`] = el;
-                }}
-                className="overflow-hidden transition-all duration-300"
-                style={{
-                  height: isOpen ? `${subMenuHeight[`${menuType}-${index}`]}px` : "0px",
-                }}
-              >
-                <ul className="mt-2 space-y-1 mr-9">
-                  {nav.subItems!.map((subItem) => (
-                    <li key={subItem.name}>
-                      <Link 
-                        href={subItem.path} 
-                        className={`menu-dropdown-item flex items-center justify-between rounded-lg p-2 text-xs font-semibold ${isActive(subItem.path) ? "text-indigo-600 dark:text-indigo-400"
-                          : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                      >
-                        {subItem.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* بخش زیرمنوها */}
+            <AnimatePresence initial={false}>
+              {hasSubmenu && isOpen && (isExpanded || isHovered || isMobileOpen) && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <ul className="mt-1 space-y-1 mr-9 relative py-1">
+                    {/* خط مینی‌مال اتصال عمودی زیرمنو */}
+                    <div className="absolute right-[-10px] top-0 bottom-2 w-[1px] bg-slate-200/60 dark:bg-white/[0.06]" />
+                    
+                    {nav.subItems!.map((subItem) => {
+                      const isSubActive = isActive(subItem.path);
+                      
+                      return (
+                        <li key={subItem.name}>
+                          <Link 
+                            href={subItem.path} 
+                            className={`
+                              group/sub flex items-center justify-between rounded-lg p-2 pr-3.5 text-xs font-bold 
+                              transition-all duration-300 relative overflow-hidden
+                              ${isSubActive ? styles.activeSubmenu : styles.hoverSubmenu}
+                            `}
+                          >
+                            <div className="flex items-center gap-2 transition-transform duration-300 group-hover/sub:-translate-x-1">
+                              <span className={`
+                                w-1.5 h-1.5 rounded-full transition-all duration-300 shrink-0
+                                ${isSubActive ? styles.dotActive : styles.dotHover}
+                              `} />
+                              <span className="whitespace-nowrap">{subItem.name}</span>
+                            </div>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </li>
         );
       })}
@@ -244,54 +340,89 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed top-0 right-0 h-screen z-50 bg-white/95 dark:bg-[#0c0d14]/95 border-l backdrop-blur-3xl
-        border-slate-200/60 dark:border-[#1f2235]/40 transition-all duration-300 ease-in-out flex flex-col px-5
-        ${isMobile ? (isMobileOpen ? "translate-x-0 w-52.5" : "translate-x-full w-52.5")
-        : isExpanded || isHovered ? "w-52.5" : "w-[90px]"}`}
+      className={`
+        fixed top-0 right-0 h-screen z-50 bg-white/80 dark:bg-[#0c0d14]/85 border-l backdrop-blur-3xl
+        border-slate-200/50 dark:border-white/[0.04] transition-all duration-300 ease-in-out flex flex-col px-4
+        ${isMobile 
+          ? (isMobileOpen ? "translate-x-0 w-[210px]" : "translate-x-full w-[210px]")
+          : isExpanded || isHovered ? "w-[210px]" : "w-[90px]"
+        }
+      `}
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      <div className={`py-8 flex ${!isExpanded ? "lg:justify-center" : "justify-start"}`}>
+      {/* هدر سایدبار با گرادیان داینامیک */}
+      <div className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start pr-2"}`}>
         <Link href="/dashboard">
-          <span className="text-indigo-600 dark:text-indigo-400 font-extrabold text-sm whitespace-nowrap">
+          <span className={`
+            font-black text-sm whitespace-nowrap bg-clip-text text-transparent
+            bg-gradient-to-r ${styles.logoGradient}
+          `}>
             {isExpanded || isHovered || isMobileOpen ? "داشبورد مدیریت" : "آمازون"}
           </span>
         </Link>
       </div>
 
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar pb-6">
         <nav className="mb-6">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
+            
+            {/* منو اول */}
             <div>
-              <h2 className={`mb-4 text-xs uppercase flex leading-[20px] text-slate-400 dark:text-slate-600
-                ${!isExpanded ? "lg:justify-center" : "justify-start"}`}>
-                {isExpanded || isHovered || isMobileOpen ? "منو کاربری" : (
-                  <Image 
-                    src={HorizontaLDots} 
-                    alt="" 
-                    className="dark:invert" 
-                    width={20}
-                    height={20}
-                  />
-                )}
+              <h2 className={`mb-4 text-[10px] uppercase font-extrabold tracking-widest text-slate-400 dark:text-slate-500 flex
+                ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start pr-3"}`}>
+                <AnimatePresence mode="wait">
+                  {isExpanded || isHovered || isMobileOpen ? (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      منو کاربری
+                    </motion.span>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-slate-400 dark:text-slate-500 opacity-60"
+                    >
+                      <FiMoreHorizontal className="w-4 h-4" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </h2>
               {renderMenuItems(navItems, "main")}
             </div>
+
+            {/* منو دوم */}
             <div>
-              <h2 className={`mb-4 text-xs uppercase flex leading-[20px] text-slate-400 dark:text-slate-600
-                ${!isExpanded ? "lg:justify-center" : "justify-start"}`}>
-                {isExpanded || isHovered || isMobileOpen ? "سایر بخش‌ها" : (
-                  <Image 
-                    src={HorizontaLDots} 
-                    alt="" 
-                    className="dark:invert" 
-                    width={20}
-                    height={20}
-                  />
-                )}
+              <h2 className={`mb-4 text-[10px] uppercase font-extrabold tracking-widest text-slate-400 dark:text-slate-500 flex
+                ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start pr-3"}`}>
+                <AnimatePresence mode="wait">
+                  {isExpanded || isHovered || isMobileOpen ? (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      سایر بخش‌ها
+                    </motion.span>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-slate-400 dark:text-slate-500 opacity-60"
+                    >
+                      <FiMoreHorizontal className="w-4 h-4" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </h2>
               {renderMenuItems(othersItems, "others")}
             </div>
+
           </div>
         </nav>
       </div>

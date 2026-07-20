@@ -23,6 +23,8 @@ model User {
   otps          OTP[]
   posts         Post[]
   postComments  PostComment[]
+
+  auditLogs AuditLog[]
 }
 
 model Address {

@@ -2,11 +2,16 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+
 import { getItems } from "@/app/actions/crud/crudActions";
+// ۱. ایمپورت سیستم نوتیفیکیشن اختصاصی
+import { useNotification } from "@/context/NotificationContext";
 
 export function useCRUD(model: string, modelName: string) {
   const searchParams = useSearchParams();
+  
+  // ۲. دریافت متد ارسال پیام از کانتکست
+  const { addNotification } = useNotification();
   
   const initialFilters = useMemo(() => {
     const params: Record<string, any> = {};
@@ -29,14 +34,21 @@ export function useCRUD(model: string, modelName: string) {
   const refreshList = useCallback(async () => {
     setLoading(true);
     const res = await getItems(model, page, limit, { ...filters, deleted: showTrash });
+    
     if (!res.success) {
-      toast.error(res.error || `خطا در دریافت ${modelName}`);
+      // ۳. جایگزینی toast قدیمی با سیستم نوتیفیکیشن جدید
+      addNotification({
+        type: "error",
+        title: "خطا در دریافت اطلاعات",
+        message: res.error || `خطا در واکشی اطلاعات ${modelName} رخ داد.`,
+        duration: 3000,
+      });
     } else {
       setData(res.data);
       setTotal(res.total);
     }
     setLoading(false);
-  }, [model, page, limit, filters, showTrash, modelName]);
+  }, [model, page, limit, filters, showTrash, modelName, addNotification]); // اضافه شدن addNotification به آرایه وابستگی‌ها
 
   useEffect(() => {
     refreshList();

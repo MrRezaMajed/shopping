@@ -1,6 +1,6 @@
 import React from "react";
-import { Inbox } from "lucide-react";
 import { motion } from "framer-motion";
+import { FaInbox } from "react-icons/fa";
 
 export const EmptyState = React.memo(function EmptyState() {
   return (
@@ -12,7 +12,7 @@ export const EmptyState = React.memo(function EmptyState() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="relative p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-850"
         >
-          <Inbox className="text-4xl sm:text-5xl text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+          <FaInbox className="text-4xl sm:text-5xl text-slate-300 dark:text-slate-600 stroke-[1.5]" />
         </motion.div>
       </div>
 

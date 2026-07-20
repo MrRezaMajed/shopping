@@ -1,3 +1,5 @@
+// @/components/ui/CRUDPage/confing/registry.ts (یا مسیر مشابه شما)
+
 import * as Yup from "yup";
 import { CRUDField } from "@/components/ui/CRUDPage/types";
 import { FilterField } from "@/components/ui/GenericFilterBar/types";
@@ -7,9 +9,10 @@ import { productConfig } from "./models/product.config";
 import { categoryConfig } from "./models/category.config";
 import { brandConfig } from "./models/brand.config";
 import { bannerConfig } from "./models/banner.config";
+import { postConfig } from "./models/post.config"; // اضافه شدن کانفیگ جدید پست
 
 export interface ModelRegistryConfig {
-  modelKey: "product" | "category" | "brand" | "banner";
+  modelKey: "product" | "category" | "brand" | "banner" | "post"; // اضافه شدن post
   modelName: string;
   enableStatusToggle: boolean;
   hiddenOnMobile: string[];
@@ -23,10 +26,10 @@ export interface ModelRegistryConfig {
   filterFields: FilterField[];
 }
 
-// قرارگیری تمام پیکربندی‌ها در هاب مرکزی مدل‌ها
 export const modelRegistry: Record<string, ModelRegistryConfig> = {
   products: productConfig,
   categories: categoryConfig,
   brands: brandConfig,
   banners: bannerConfig,
+  posts: postConfig, // رجیستر شدن پست‌ها
 };

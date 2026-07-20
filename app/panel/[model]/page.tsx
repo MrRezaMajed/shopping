@@ -1,6 +1,8 @@
+// @/app/dashboard/[model]/page.tsx (یا مسیر مشابه شما)
+
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useParams, notFound } from "next/navigation";
 import CRUDPage from "@/components/ui/CRUDPage/CRUDPage";
 import { useDynamicOptions } from "./hooks/useDynamicOptions";
@@ -30,7 +32,9 @@ const normalizeModelParam = (param: string): string => {
     brand: "brands",
     brands: "brands",
     banner: "banners",
-    banners: "banners"
+    banners: "banners",
+    post: "posts",        // اضافه شده برای مدل پست
+    posts: "posts"        // اضافه شده برای مدل پست
   };
   return map[param.toLowerCase()] || param;
 };
@@ -39,7 +43,7 @@ export default function GenericModelPage() {
   const params = useParams();
   const rawModelParam = String(params?.model || "");
   
-  // تبدیل هوشمند پارامتر آدرس (مثلا تبدیل category به categories)
+  // تبدیل هوشمند پارامتر آدرس
   const modelParam = useMemo(() => normalizeModelParam(rawModelParam), [rawModelParam]);
 
   // بررسی تطابق با مدل‌های ثبت‌شده در رجیستری پنل
@@ -60,7 +64,7 @@ export default function GenericModelPage() {
     dynamicOptions,
   } = useDynamicOptions(config.modelKey);
 
-  // لود ستون‌های جدول (بدون نیاز به هوک تکراری useCRUD در این لایه)
+  // لود ستون‌های جدول
   const tableFields = useMemo(() => {
     return config.getFields({ 
       flatCategories, 

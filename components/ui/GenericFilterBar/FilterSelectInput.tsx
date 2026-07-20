@@ -40,7 +40,7 @@ export const FilterSelectInput = React.memo(function FilterSelectInput({
           </option>
         ))}
       </select>
-      <FiChevronDown className="absolute left-4 top-1/3 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none transition-all duration-300 group-focus-within:rotate-180 group-focus-within:text-indigo-500" />
+      <FiChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none transition-all duration-300 group-focus-within:rotate-180 group-focus-within:text-indigo-500" />
     </motion.div>
   );
 });

@@ -356,7 +356,7 @@ async function getItemDisplayName(model: ModelKey, id: number): Promise<string> 
     if (!db) return `شناسه ${id}`;
 
     // تشخیص دقیق نام فیلد (محصول و بنر "title" دارند و برند و دسته‌بندی "name")
-    const isTitleModel = model === "product" || model === "banner";
+    const isTitleModel = model === "product" || model === "banner" || model === "post";
     const selectField = isTitleModel ? "title" : "name";
 
     const item = await (db as any).findUnique({

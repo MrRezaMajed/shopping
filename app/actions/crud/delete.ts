@@ -1,9 +1,10 @@
+// @/app/actions/crud/delete.ts (یا مسیر مشابه شما)
+
 "use server";
 
 import { prisma } from "@/lib/prisma";
 import { modelMap, ModelKey, enumFields } from "./types";
 import { logActivity } from "../audit/log";
-
 
 /**
  * حذف فیزیکی یا منطقی (Soft Delete) آیتم‌ها
@@ -175,7 +176,8 @@ export async function restoreItem(model: ModelKey, id: number) {
         banner: "Banner",
         brand: "ProductBrand",
         category: "Category",
-        product: "Product"
+        product: "Product",
+        post: "Post" // 👈 اضافه شدن نام فیزیکی جدول پست برای اجرای پرس‌وجوهای مستقیم
       };
 
       const tableName = tableNameMap[model];
@@ -220,7 +222,6 @@ export async function restoreItem(model: ModelKey, id: number) {
   }
 }
 
-
 /**
  * تابع کمکی برای استخراج نام یا عنوان فارسی آیتم قبل از ثبت لاگ تغییرات
  */
@@ -229,14 +230,14 @@ async function getItemDisplayName(model: ModelKey, id: number): Promise<string> 
     const db = modelMap[model];
     if (!db) return `شناسه ${id}`;
 
-    // تشخیص دقیق نام فیلد (محصول و بنر "title" دارند و برند و دسته‌بندی "name")
-    const isTitleModel = model === "product" || model === "banner";
+    // تشخیص دقیق نام فیلد (پست، محصول و بنر "title" دارند و برند و دسته‌بندی "name")
+    const isTitleModel = model === "product" || model === "banner" || model === "post"; // 👈 اضافه شدن مدل post
     const selectField = isTitleModel ? "title" : "name";
 
     const item = await (db as any).findUnique({
       where: { id },
       select: {
-        [selectField]: true, // 👈 اصلاح شد: فقط فیلد فعال به عنوان true فرستاده می‌شود
+        [selectField]: true,
       },
     });
 

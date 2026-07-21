@@ -1,4 +1,4 @@
-// @/app/dashboard/[model]/page.tsx (یا مسیر مشابه شما)
+// @/app/dashboard/[model]/page.tsx
 
 "use client";
 
@@ -8,7 +8,6 @@ import CRUDPage from "@/components/ui/CRUDPage/CRUDPage";
 import { useDynamicOptions } from "./hooks/useDynamicOptions";
 import { modelRegistry } from "./confing/registry";
 
-// تعریف مستقیم کامپوننت لودینگ به صورت کاملاً خودکفا (Inline)
 const CategoryLoading = () => {
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -22,7 +21,6 @@ const CategoryLoading = () => {
   );
 };
 
-// تابع نرمالایزر برای مپ کردن هوشمند حالت‌های مفرد و جمع آدرس‌ها
 const normalizeModelParam = (param: string): string => {
   const map: Record<string, string> = {
     category: "categories",
@@ -33,8 +31,8 @@ const normalizeModelParam = (param: string): string => {
     brands: "brands",
     banner: "banners",
     banners: "banners",
-    post: "posts",        // اضافه شده برای مدل پست
-    posts: "posts"        // اضافه شده برای مدل پست
+    post: "posts",
+    posts: "posts"
   };
   return map[param.toLowerCase()] || param;
 };
@@ -43,20 +41,16 @@ export default function GenericModelPage() {
   const params = useParams();
   const rawModelParam = String(params?.model || "");
   
-  // تبدیل هوشمند پارامتر آدرس
   const modelParam = useMemo(() => normalizeModelParam(rawModelParam), [rawModelParam]);
 
-  // بررسی تطابق با مدل‌های ثبت‌شده در رجیستری پنل
   const config = useMemo(() => {
     return modelRegistry[modelParam] || null;
   }, [modelParam]);
 
-  // در صورت عدم وجود پیکربندی معتبر، رندر ۴۰۴ استاندارد نکست‌جی‌اس
   if (!config) {
     notFound();
   }
 
-  // لود خودکار پویای ساختار درختی و گزینه‌های مورد نیاز فیلدها
   const {
     flatCategories,
     flatBrands,
@@ -64,7 +58,6 @@ export default function GenericModelPage() {
     dynamicOptions,
   } = useDynamicOptions(config.modelKey);
 
-  // لود ستون‌های جدول
   const tableFields = useMemo(() => {
     return config.getFields({ 
       flatCategories, 
@@ -81,9 +74,7 @@ export default function GenericModelPage() {
       model={config.modelKey}
       modelName={config.modelName}
       fields={tableFields}
-      formFields={config.formFields}
       filterFields={config.filterFields}
-      validationSchema={config.validationSchema}
       enableStatusToggle={config.enableStatusToggle}
       dynamicOptions={dynamicOptions}
       hiddenOnMobile={config.hiddenOnMobile}

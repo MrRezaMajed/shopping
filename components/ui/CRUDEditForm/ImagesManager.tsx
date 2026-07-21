@@ -8,6 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import { SectionPanel } from "./SectionPanel";
 import { EmptyState } from "./EmptyState";
 import ImageCropperModal from "../ImageCropper/ImageCropperModal";
+import { toPersianNumber } from "@/lib/utils/persianNumbers";
 
 interface ImagesManagerProps {
   name: string;

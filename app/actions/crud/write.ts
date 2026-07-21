@@ -1,3 +1,5 @@
+// @/app/actions/crud/write.ts
+
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -6,16 +8,19 @@ import { modelMap, ModelKey, CRUDItemInput } from "./types";
 import { sanitizeData, cleanAndParseNumber, handleFileUpload, serializeDecimal } from "./helpers";
 import { getRelationIncludes } from "./helpers";
 import { logActivity } from "../audit/log";
+import { revalidatePath } from "next/cache"; // 👈 اضافه کردن این ایمپورت
 
-interface VariantPriceUpdate {
-  id: number;
-  price: number;
-}
-
-
+// هماهنگ‌کننده نام‌های جمع مدل‌ها برای ساخت آدرس‌ها
+const pluralModelMap: Record<string, string> = {
+  category: "categories",
+  product: "products",
+  brand: "brands",
+  banner: "banners",
+  post: "posts",
+};
 
 /**
- * ایجاد آیتم جدید در دیتابیس (محصول و روابط آن یا مدل‌های ساده)
+ * ایجاد آیتم جدید در دیتابیس
  */
 export async function createItem(model: ModelKey, data: CRUDItemInput) {
   try {
@@ -112,19 +117,21 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
 
       const targetTitle = sanitizedData.title;
 
-      // ثبت لاگ مربوط به ایجاد محصول موفقیت‌آمیز همراه با نام کالا
       await logActivity({
         action: "CREATE",
         modelName: "Product",
         recordId: fullProduct?.id || null,
-        targetName: targetTitle, // ارسال عنوان محصول
+        targetName: targetTitle,
         details: `محصول جدید با عنوان «${targetTitle}» توسط مدیریت در سیستم ثبت گردید.`,
       });
+
+      // 👈 پاک‌سازی کش کلاینت و سرور به صورت مستقیم روی روت مدل
+      const plural = pluralModelMap[model] || model;
+      revalidatePath(`/panel/${plural}`);
 
       return { success: true, data: serializeDecimal(fullProduct) };
     }
 
-    // ثبت مدل‌های ساده‌تر غیر از محصول
     const item = await db.create({
       data: {
         ...sanitizedData,
@@ -134,14 +141,17 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
 
     const targetName = sanitizedData.title || sanitizedData.name || "نامشخص";
 
-    // ثبت لاگ مربوط به ایجاد سایر مدل‌ها (برند، دسته‌بندی و بنر) همراه با نام یا عنوان
     await logActivity({
       action: "CREATE",
       modelName: model,
       recordId: item.id,
-      targetName: targetName, // ارسال نام برند یا دسته‌بندی یا بنر
+      targetName: targetName,
       details: `یک رکورد جدید در بخش ${model} با نام «${targetName}» با موفقیت اضافه شد.`,
     });
+
+    // 👈 پاک‌سازی کش سایر مدل‌ها روی روت مدل مربوطه
+    const plural = pluralModelMap[model] || model;
+    revalidatePath(`/panel/${plural}`);
 
     return { success: true, data: serializeDecimal(item) };
   } catch (err: any) {
@@ -158,9 +168,7 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
     const db = modelMap[model];
     if (!db) throw new Error(`Model "${model}" not found`);
 
-    // استخراج عنوان یا نام آیتم پیش از اعمال تغییرات
     const targetName = await getItemDisplayName(model, id);
-
     const sanitizedData = await sanitizeData(model, data);
 
     if (model === "product") {
@@ -263,19 +271,21 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
         }
       });
 
-      // ثبت لاگ مربوط به ویرایش محصول با ذکر عنوان آن کالا
       await logActivity({
         action: "UPDATE",
         modelName: "Product",
         recordId: id,
-        targetName: targetName, // ارسال عنوان کالا
+        targetName: targetName,
         details: `اطلاعات و تنوع‌های مربوط به محصول «${targetName}» ویرایش و به‌روزرسانی شد.`,
       });
+
+      // 👈 پاک‌سازی کش هنگام ویرایش محصول
+      const plural = pluralModelMap[model] || model;
+      revalidatePath(`/panel/${plural}`);
 
       return { success: true };
     }
 
-    // ثبت مدل‌های ساده غیر از کالا
     const updated = await db.updateMany({
       where: { id, softDeletedAt: null },
       data: sanitizedData,
@@ -285,14 +295,17 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
       return { success: false, error: "Record not found or deleted" };
     }
 
-    // ثبت لاگ تغییر سایر مدل‌ها (برند، دسته یا بنر) همراه با ذکر نام آن گزینه
     await logActivity({
       action: "UPDATE",
       modelName: model,
       recordId: id,
-      targetName: targetName, // ارسال نام برند یا دسته‌بندی تغییر یافته
+      targetName: targetName,
       details: `آیتم «${targetName}» در بخش ${model} ویرایش و به‌روزرسانی شد.`,
     });
+
+    // 👈 پاک‌سازی کش کلاینت برای سایر مدل‌ها
+    const plural = pluralModelMap[model] || model;
+    revalidatePath(`/panel/${plural}`);
 
     return { success: true };
   } catch (err: any) {
@@ -313,7 +326,6 @@ export async function quickUpdateVariantPrices(
       throw new Error("لیست تغییرات قیمت خالی است");
     }
 
-    // دریافت نام کالا برای ثبت دقیق لاگ فعالیت
     const product = await prisma.product.findUnique({
       where: { id: productId },
       select: { title: true },
@@ -331,14 +343,16 @@ export async function quickUpdateVariantPrices(
       )
     );
 
-    // ثبت لاگ ویرایش سریع قیمت‌ها با نمایش نام کالا
     await logActivity({
       action: "UPDATE",
       modelName: "Product",
       recordId: productId,
-      targetName: targetName, // ارسال عنوان کالا
+      targetName: targetName,
       details: `قیمت‌های مربوط به تنوع‌های محصول «${targetName}» به صورت ویرایش سریع به‌روزرسانی شد.`,
     });
+
+    // 👈 پاک‌سازی کش لیست محصولات در ویرایش سریع
+    revalidatePath("/panel/products");
 
     return { success: true };
   } catch (err: any) {
@@ -355,14 +369,13 @@ async function getItemDisplayName(model: ModelKey, id: number): Promise<string> 
     const db = modelMap[model];
     if (!db) return `شناسه ${id}`;
 
-    // تشخیص دقیق نام فیلد (محصول و بنر "title" دارند و برند و دسته‌بندی "name")
     const isTitleModel = model === "product" || model === "banner" || model === "post";
     const selectField = isTitleModel ? "title" : "name";
 
     const item = await (db as any).findUnique({
       where: { id },
       select: {
-        [selectField]: true, // 👈 اصلاح شد: فقط فیلد فعال به عنوان true فرستاده می‌شود
+        [selectField]: true,
       },
     });
 

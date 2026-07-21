@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom"; // اضافه شدن پورتال برای انتقال به روت بدنه
 import { motion } from "framer-motion";
 import { FiZoomIn, FiCheck, FiX } from "react-icons/fi";
+import { toPersianNumber } from "@/lib/utils/persianNumbers";
 
 interface ImageCropperModalProps {
   imageSrc: string;
@@ -24,11 +26,25 @@ export default function ImageCropperModal({
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [mounted, setMounted] = useState(false); // کنترل وضعیت رندر در کلاینت (Next.js)
   
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const maskRef = useRef<HTMLDivElement>(null);
+
+  // ۱. مدیریت مونت شدن و قفل کردن اسکرول صفحه اصلی
+  useEffect(() => {
+    setMounted(true);
+    
+    // غیرفعال کردن اسکرول صفحه زیرین زمان باز شدن مودال
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      // بازگرداندن اسکرول به حالت عادی پس از بستن مودال
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
   // ریست کردن پوزیشن و زوم در زمان باز شدن تصویر جدید
   useEffect(() => {
@@ -79,21 +95,17 @@ export default function ImageCropperModal({
     const img = imageRef.current;
     const mask = maskRef.current;
 
-    // پیدا کردن ابعاد و مختصات فیزیکی رندرشده کادر ماسک و عکس روی مانیتور
     const maskRect = mask.getBoundingClientRect();
     const imgRect = img.getBoundingClientRect();
 
-    // محاسبه ضریب تفاوت سایز فیزیکی رندر شده با سایز اصلی تصویر طبیعی (Natural Size)
     const scaleX = img.naturalWidth / imgRect.width;
     const scaleY = img.naturalHeight / imgRect.height;
 
-    // تبدیل مختصات رندر شده مانیتور به مختصات پیکسل‌های فیزیکی تصویر واقعی
     const cropX = (maskRect.left - imgRect.left) * scaleX;
     const cropY = (maskRect.top - imgRect.top) * scaleY;
     const cropWidth = maskRect.width * scaleX;
     const cropHeight = maskRect.height * scaleY;
 
-    // ساخت کانواس پویا متناسب با ابعاد هدف تعیین شده
     const canvas = document.createElement("canvas");
     canvas.width = targetWidth;
     canvas.height = Math.round(targetWidth / aspectRatio);
@@ -101,11 +113,9 @@ export default function ImageCropperModal({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // فعال‌سازی الگوریتم نرم‌سازی تصاویر کلاینت با کیفیت بالا
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
-    // رسم بخش برش خورده تصویر اصلی بر روی کانواس
     ctx.drawImage(
       img,
       cropX,
@@ -118,12 +128,10 @@ export default function ImageCropperModal({
       canvas.height
     );
 
-    // تبدیل کانواس به فرمت کم‌حجم JPEG با فشردگی بهینه ۸۵٪
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
         
-        // تبدیل Blob خروجی به فایل استاندارد جاوا اسکریپت جهت آپلود مستقیم در سرور اکشن‌ها
         const croppedFile = new File([blob], "optimized-image.jpg", {
           type: "image/jpeg",
           lastModified: Date.now(),
@@ -132,20 +140,30 @@ export default function ImageCropperModal({
         onCrop(croppedFile);
       },
       "image/jpeg",
-      0.85 // اعمال فشرده‌سازی ۸۵ درصدی
+      0.85
     );
   };
 
-  // محاسبه پویای کادر ماسک وسط صفحه بر اساس نسبت ابعاد فعال فیلد
   const maskStyle: React.CSSProperties = {
     width: aspectRatio === 1 ? "260px" : "340px",
     height: aspectRatio === 1 ? "260px" : "191px",
   };
 
-  return (
+  // ممانعت از رندر شدن در سمت سرور تا زمان مونت شدن کامل در کلاینت
+  if (!mounted) return null;
+
+  // رندر کردن کامپوننت با استفاده از Portal در بدنه اصلی سند (document.body)
+  return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-      {/* بک‌دراپ تاریک مودال */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
+      {/* 
+        بک‌دراپ مودال:
+        رنگ تیره ملایم (bg-black/25) و بدون تار کردن زیاد پس‌زمینه اعمال شده تا اجزای زیرین به خوبی دیده شوند.
+        وجود این لایه کلیکی به کاربر اجازه تعامل با پشت مودال را نمی‌دهد.
+      */}
+      <div 
+        className="absolute inset-0 bg-black/25 backdrop-blur-[2px] cursor-not-allowed" 
+        onClick={onCancel} 
+      />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -181,7 +199,6 @@ export default function ImageCropperModal({
             cursor-move select-none flex items-center justify-center
           "
         >
-          {/* عکس در حال جابه‌جایی و زوم */}
           <img
             ref={imageRef}
             src={imageSrc}
@@ -194,7 +211,6 @@ export default function ImageCropperModal({
             className="max-w-full max-h-full object-contain pointer-events-none"
           />
 
-          {/* کادر شفاف ماسک برش تصویر در وسط به همراه سایه تاریک‌کننده اطراف */}
           <div
             ref={maskRef}
             style={maskStyle}
@@ -205,7 +221,7 @@ export default function ImageCropperModal({
           />
         </div>
 
-        {/* اسلایدر شیک کنترل زوم */}
+        {/* اسلایدر کنترل زوم */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 font-bold">
             <span className="flex items-center gap-1"><FiZoomIn /> بزرگ‌نمایی</span>
@@ -245,6 +261,7 @@ export default function ImageCropperModal({
           </button>
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body // پورت کردن به تگ بادی سیستم
   );
 }

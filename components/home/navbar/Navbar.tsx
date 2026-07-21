@@ -70,7 +70,7 @@ export default function Navbar() {
           ${mobileOpen ? "hidden md:block z-[9999]" : "z-40"}
         `}
       >
-        <div className="max-w-[1440px] mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between relative">
+        <div className="max-w-[1440px] mx-auto py-1 px-4 sm:px-6 lg:px-8 flex items-center justify-between relative">
           <div className="flex items-center gap-6">
             {/* دکمه منوی همبرگری موبایل با افکت چرخشی */}
             <button
@@ -201,13 +201,13 @@ export default function Navbar() {
               <Link href="#" className="relative py-2 group flex items-center gap-1.5 hover:text-brand-600 dark:hover:text-brand-400 transition-colors duration-300">
                 <FiShoppingBag className="text-slate-400 group-hover:text-brand-500 transition-colors duration-300" />
                 <span>سوپرمارکت</span>
-                <span className="absolute bottom-0 right-0 left-0 h-[2px] bg-brand-500 rounded-full scale-x-0 origin-right group-hover:scale-x-100 transition-transform duration-300 ease-out" />
+                <span className="absolute mt-12 right-0 left-0 h-[2px] bg-brand-500 rounded-full scale-x-0 origin-right group-hover:scale-x-100 transition-transform duration-300 ease-out" />
               </Link>
 
               <Link href="#" className="relative py-2 group flex items-center gap-1.5 text-brand-500 dark:text-brand-400 hover:text-brand-600 transition-colors duration-300 font-extrabold">
                 <FiPercent className="text-brand-500 transition-transform duration-300 group-hover:rotate-12" />
                 <span>تخفیف‌ها و پیشنهادها</span>
-                <span className="absolute bottom-0 right-0 left-0 h-[2px] bg-brand-500 dark:bg-brand-400 rounded-full scale-x-0 origin-right group-hover:scale-x-100 transition-transform duration-300 ease-out" />
+                <span className="absolute mt-12 right-0 left-0 h-[2px] bg-brand-500 dark:bg-brand-400 rounded-full scale-x-0 origin-right group-hover:scale-x-100 transition-transform duration-300 ease-out" />
               </Link>
             </nav>
           </div>

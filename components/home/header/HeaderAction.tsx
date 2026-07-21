@@ -1,11 +1,13 @@
+// HeaderActions.tsx
 "use client";
 import { FC, useEffect, useState } from "react";
 import UserProfile from "./UserProfile";
 import CartDropdown from "./CartDropdown";
 import ThemeToggle from "./ThemeToggle";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react"; // 👈 حذف signIn از اینجا چون از Link استفاده می‌کنیم
 import { FaSignInAlt } from "react-icons/fa";
 import { motion } from "framer-motion";
+import Link from "next/link"; // 👈 اضافه کردن Link برای مسیریابی بهینه
 
 const HeaderActions: FC = () => {
   const { data: session } = useSession();
@@ -31,15 +33,17 @@ const HeaderActions: FC = () => {
         {session ? (
           <UserProfile signout={signOut} />
         ) : (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => signIn()}
-            className="flex items-center justify-center gap-2 px-4.5 py-2 text-xs font-extrabold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 dark:text-zinc-200 dark:hover:text-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 rounded-2xl border border-slate-200/40 dark:border-zinc-800/60 shadow-sm transition-colors duration-300"
-          >
-            <FaSignInAlt className="text-sm" />
-            <span className="hidden sm:inline">ورود / ثبت‌نام</span>
-          </motion.button>
+          // 👈 تغییر ساختار به Link جهت هدایت به صفحه لاگین اختصاصی شما
+          <Link href="/login" className="block">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center justify-center gap-2 px-4.5 py-2 text-xs font-extrabold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 dark:text-zinc-200 dark:hover:text-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 rounded-2xl border border-slate-200/40 dark:border-zinc-800/60 shadow-sm transition-colors duration-300 cursor-pointer"
+            >
+              <FaSignInAlt className="text-sm" />
+              <span className="hidden sm:inline">ورود / ثبت‌نام</span>
+            </motion.div>
+          </Link>
         )}
       </div>
 

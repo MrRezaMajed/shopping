@@ -17,6 +17,8 @@ datasource db {
 ////////////////////////////////////
 
 enum UserRole {
+  WRITER     
+  SUPPORT
   USER
   ADMIN
   SUPER_ADMIN
@@ -108,6 +110,7 @@ model User {
   image         String?   // 👈 اضافه شد برای آدرس آواتار دریافتی از گوگل/گیت‌هاب
   password      String?   // 👈 از حالت اجباری به اختیاری تغییر یافت تا ثبت‌نام گوگل/گیت‌هاب با خطا مواجه نشود
   role          UserRole  @default(USER)
+  permissions   String?   @default("")
   status        Status    @default(ACTIVE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

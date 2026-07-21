@@ -10,7 +10,7 @@ const Header: FC = () => {
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/75 dark:bg-zinc-950/75 border-b border-slate-200/50 dark:border-zinc-800/50 transition-colors duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
       <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4 gap-4 md:gap-8">
+        <div className="flex justify-between items-center py-1 gap-4 md:gap-8">
           
           {/* لوگو به همراه افکت هاور فنری */}
           <motion.div 

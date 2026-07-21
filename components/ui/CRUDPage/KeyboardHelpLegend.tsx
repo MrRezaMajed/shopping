@@ -1,9 +1,15 @@
-// جعبه راهنمای شناور میانبرهای کیبورد
+// @/components/ui/CRUDPage/KeyboardHelpLegend.tsx
 
 import React from "react";
 import { FiHelpCircle } from "react-icons/fi";
 
-export const KeyboardHelpLegend = React.memo(function KeyboardHelpLegend() {
+interface KeyboardHelpLegendProps {
+  disableCreate?: boolean; // 👈 اضافه شدن پروپ دریافتی جهت پنهان‌سازی مشروط
+}
+
+export const KeyboardHelpLegend = React.memo(function KeyboardHelpLegend({
+  disableCreate = false, // 👈 مقدار پیش‌فرض
+}: KeyboardHelpLegendProps) {
   return (
     <div className="fixed bottom-6 left-6 z-50 group/legend">
       <div className="relative">
@@ -21,10 +27,13 @@ export const KeyboardHelpLegend = React.memo(function KeyboardHelpLegend() {
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
           </h4>
           <ul className="text-[11px] text-slate-500 dark:text-slate-400 space-y-2 font-medium">
-            <li className="flex justify-between items-center">
-              <span>ایجاد مورد جدید</span>
-              <kbd className="px-1.5 py-0.5 rounded border border-slate-200/60 bg-slate-50 dark:bg-[#121420] font-mono text-[9px] font-bold">C</kbd>
-            </li>
+            {/* 👈 بررسی مشروط نمایش دکمه میانبر کیبورد */}
+            {!disableCreate && (
+              <li className="flex justify-between items-center">
+                <span>ایجاد مورد جدید</span>
+                <kbd className="px-1.5 py-0.5 rounded border border-slate-200/60 bg-slate-50 dark:bg-[#121420] font-mono text-[9px] font-bold">C</kbd>
+              </li>
+            )}
             <li className="flex justify-between items-center">
               <span>همگام‌سازی و بروزرسانی</span>
               <kbd className="px-1.5 py-0.5 rounded border border-slate-200/60 bg-slate-50 dark:bg-[#121420] font-mono text-[9px] font-bold">R</kbd>

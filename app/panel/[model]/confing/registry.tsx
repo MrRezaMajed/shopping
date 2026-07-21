@@ -1,4 +1,4 @@
-// @/components/ui/CRUDPage/confing/registry.ts (یا مسیر مشابه شما)
+// @/components/ui/CRUDPage/confing/registry.ts
 
 import * as Yup from "yup";
 import { CRUDField } from "@/components/ui/CRUDPage/types";
@@ -9,10 +9,11 @@ import { productConfig } from "./models/product.config";
 import { categoryConfig } from "./models/category.config";
 import { brandConfig } from "./models/brand.config";
 import { bannerConfig } from "./models/banner.config";
-import { postConfig } from "./models/post.config"; // اضافه شدن کانفیگ جدید پست
+import { postConfig } from "./models/post.config";
+import { userConfig } from "./models/user.config"; // 👈 فایل جدید کاربران
 
 export interface ModelRegistryConfig {
-  modelKey: "product" | "category" | "brand" | "banner" | "post"; // اضافه شدن post
+  modelKey: "product" | "category" | "brand" | "banner" | "post" | "user"; // 👈 اضافه شدن user
   modelName: string;
   enableStatusToggle: boolean;
   hiddenOnMobile: string[];
@@ -24,6 +25,10 @@ export interface ModelRegistryConfig {
   getFields: (deps: { flatCategories: any[]; flatBrands: any[] }) => CRUDField[];
   formFields: CRUDField[];
   filterFields: FilterField[];
+
+  // 👈 پروپ‌های محدودکننده برای صفحات بدون فرم
+  disableCreate?: boolean;
+  disableEdit?: boolean;
 }
 
 export const modelRegistry: Record<string, ModelRegistryConfig> = {
@@ -31,5 +36,6 @@ export const modelRegistry: Record<string, ModelRegistryConfig> = {
   categories: categoryConfig,
   brands: brandConfig,
   banners: bannerConfig,
-  posts: postConfig, // رجیستر شدن پست‌ها
+  posts: postConfig,
+  users: userConfig, // 👈 رجیستر شدن بخش کاربران
 };

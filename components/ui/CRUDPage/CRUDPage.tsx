@@ -45,14 +45,14 @@ const pageVariants: Variants = {
   exit: { opacity: 0, y: -15, transition: { duration: 0.25 } },
 };
 
-// تابع کمکی تبدیل هوشمند مدل به پارامتر جمع آدرس (مثلاً product به products)
 const getPluralModelParam = (model: string): string => {
   const map: Record<string, string> = {
     category: "categories",
     product: "products",
     brand: "brands",
     banner: "banners",
-    post: "posts"
+    post: "posts",
+    user: "users" // 👈 اضافه شدن به جهت روت ترانسفر
   };
   return map[model] || model;
 };
@@ -66,6 +66,8 @@ export default function CRUDPage({
   hiddenOnMobile = [],
   dynamicOptions = {},
   filterTranslations,
+  disableCreate = false, // 👈 مقدار پیش‌فرض دریافت پروپ
+  disableEdit = false,   // 👈 مقدار پیش‌فرض دریافت پروپ
 }: Omit<CRUDPageProps, "formFields" | "validationSchema">) {
   
   const router = useRouter();
@@ -140,15 +142,15 @@ export default function CRUDPage({
     setPage(1);
   }, [setShowTrash, setPage]);
 
-  // روت داینامیک جدید برای ایجاد مورد جدید
   const handleCreate = useCallback(() => {
+    if (disableCreate) return; // لغو دستی در صورت فراخوانی غیرمنتظره
     router.push(`/panel/${pluralModel}/create`);
-  }, [router, pluralModel]);
+  }, [router, pluralModel, disableCreate]);
 
-  // روت داینامیک جدید برای ویرایش
   const handleEdit = useCallback((item: any) => {
+    if (disableEdit) return; // لغو دستی در صورت فراخوانی غیرمنتظره
     router.push(`/panel/${pluralModel}/edit/${item.id}`);
-  }, [router, pluralModel]);
+  }, [router, pluralModel, disableEdit]);
 
   const handleToggleStatus = useCallback(
     async (item: any) => {
@@ -295,8 +297,11 @@ export default function CRUDPage({
   );
 
   const commandItems = useMemo(() => {
-    return [
-      {
+    const items = [];
+
+    // 👈 اضافه شدن دکمه ایجاد به منوی کیبورد فقط در صورت فعال بودن
+    if (!disableCreate) {
+      items.push({
         id: "create",
         label: `ایجاد ${modelName} جدید`,
         shortcut: "C",
@@ -305,7 +310,10 @@ export default function CRUDPage({
           handleCreate();
           setShowPalette(false);
         }
-      },
+      });
+    }
+
+    items.push(
       {
         id: "refresh",
         label: "بروزرسانی لیست",
@@ -336,8 +344,10 @@ export default function CRUDPage({
           setShowPalette(false);
         }
       }
-    ];
-  }, [modelName, showTrash, handleTrashToggle, handleClearAllFilters, refreshList, handleCreate]);
+    );
+
+    return items;
+  }, [modelName, showTrash, handleTrashToggle, handleClearAllFilters, refreshList, handleCreate, disableCreate]);
 
   const filteredCommands = useMemo(() => {
     return commandItems.filter(item => 
@@ -385,7 +395,8 @@ export default function CRUDPage({
         return;
       }
 
-      if (key === "c" && !showTrash) {
+      // 👈 بررسی فعال بودن قابلیت ایجاد قبل از میانبر کیبورد
+      if (key === "c" && !showTrash && !disableCreate) {
         e.preventDefault();
         handleCreate();
       }
@@ -403,7 +414,7 @@ export default function CRUDPage({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showTrash, refreshList, handleTrashToggle, showPalette, filteredCommands, paletteIndex, handleCreate]);
+  }, [showTrash, refreshList, handleTrashToggle, showPalette, filteredCommands, paletteIndex, handleCreate, disableCreate]);
 
   useEffect(() => {
     if (showPalette) {
@@ -444,7 +455,8 @@ export default function CRUDPage({
               onRefresh={refreshList}
             >
               <TrashButton showTrash={showTrash} onClick={handleTrashToggle} />
-              {!showTrash && <CreateButton onClick={handleCreate} label={`ایجاد ${modelName} جدید`} />}
+              {/* 👈 اعمال شرط عدم نمایش دکمه ایجاد جدید */}
+              {!showTrash && !disableCreate && <CreateButton onClick={handleCreate} label={`ایجاد ${modelName} جدید`} />}
             </CRUDPageHeader>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -546,7 +558,8 @@ export default function CRUDPage({
               loading={loading}
               onPageChange={setPage}
               onLimitChange={setLimit}
-              onEdit={!showTrash ? handleEdit : undefined}
+              // 👈 غیرفعال کردن دکمه ویرایش در لیست در صورت ارسال فلگ disableEdit
+              onEdit={!showTrash && !disableEdit ? handleEdit : undefined}
               onDelete={(item) => showDeleteConfirm(item, false)}
               onRestore={showTrash ? handleRestore : undefined}
               onPermanentDelete={showTrash ? (item) => showDeleteConfirm(item, true) : undefined}
@@ -563,7 +576,8 @@ export default function CRUDPage({
           </motion.div>
         </AnimatePresence>
 
-        <KeyboardHelpLegend />
+        {/* 👈 فرستادن فلگ عدم ایجاد به کامپوننت راهنمای کیبورد */}
+        <KeyboardHelpLegend disableCreate={disableCreate} />
 
         <AnimatePresence>
           <CommandPalette

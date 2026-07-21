@@ -9,7 +9,7 @@ import Suggestions from "@/components/home/suggestions/Suggestions";
 
 const Home: FC = () => {
   return (
-    <main className="w-full mx-auto flex flex-col gap-8 md:gap-12 pt-14 px-12 sm:px-6 lg:px-8 xl:px-10">
+    <main className="w-full mx-auto flex flex-col gap-8 md:gap-12 pt-4 px-12 sm:px-6 lg:px-8 xl:px-10">
       
        <FullSlider /> 
       

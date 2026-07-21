@@ -8,15 +8,16 @@ import { modelMap, ModelKey, CRUDItemInput } from "./types";
 import { sanitizeData, cleanAndParseNumber, handleFileUpload, serializeDecimal } from "./helpers";
 import { getRelationIncludes } from "./helpers";
 import { logActivity } from "../audit/log";
-import { revalidatePath } from "next/cache"; // 👈 اضافه کردن این ایمپورت
+import { revalidatePath } from "next/cache";
 
-// هماهنگ‌کننده نام‌های جمع مدل‌ها برای ساخت آدرس‌ها
+// هماهنگ‌کننده نام‌های جمع مدل‌ها برای ساخت آدرس‌ها و بازنویسی کش
 const pluralModelMap: Record<string, string> = {
   category: "categories",
   product: "products",
   brand: "brands",
   banner: "banners",
   post: "posts",
+  user: "users", // 👈 هماهنگ شدن آدرس ریدایرکت/کش کاربران
 };
 
 /**
@@ -125,9 +126,9 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
         details: `محصول جدید با عنوان «${targetTitle}» توسط مدیریت در سیستم ثبت گردید.`,
       });
 
-      // 👈 پاک‌سازی کش کلاینت و سرور به صورت مستقیم روی روت مدل
       const plural = pluralModelMap[model] || model;
       revalidatePath(`/panel/${plural}`);
+      revalidatePath(`/dashboard/${plural}`);
 
       return { success: true, data: serializeDecimal(fullProduct) };
     }
@@ -149,9 +150,9 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
       details: `یک رکورد جدید در بخش ${model} با نام «${targetName}» با موفقیت اضافه شد.`,
     });
 
-    // 👈 پاک‌سازی کش سایر مدل‌ها روی روت مدل مربوطه
     const plural = pluralModelMap[model] || model;
     revalidatePath(`/panel/${plural}`);
+    revalidatePath(`/dashboard/${plural}`);
 
     return { success: true, data: serializeDecimal(item) };
   } catch (err: any) {
@@ -279,9 +280,9 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
         details: `اطلاعات و تنوع‌های مربوط به محصول «${targetName}» ویرایش و به‌روزرسانی شد.`,
       });
 
-      // 👈 پاک‌سازی کش هنگام ویرایش محصول
       const plural = pluralModelMap[model] || model;
       revalidatePath(`/panel/${plural}`);
+      revalidatePath(`/dashboard/${plural}`);
 
       return { success: true };
     }
@@ -303,9 +304,9 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
       details: `آیتم «${targetName}» در بخش ${model} ویرایش و به‌روزرسانی شد.`,
     });
 
-    // 👈 پاک‌سازی کش کلاینت برای سایر مدل‌ها
     const plural = pluralModelMap[model] || model;
     revalidatePath(`/panel/${plural}`);
+    revalidatePath(`/dashboard/${plural}`); // 👈 بازنویسی کش مسیر داینامیک پنل کاربران
 
     return { success: true };
   } catch (err: any) {
@@ -319,7 +320,7 @@ export async function updateItem(model: ModelKey, id: number, data: CRUDItemInpu
  */
 export async function quickUpdateVariantPrices(
   productId: number,
-  updates: VariantPriceUpdate[]
+  updates: any[]
 ) {
   try {
     if (!updates || updates.length === 0) {
@@ -351,8 +352,8 @@ export async function quickUpdateVariantPrices(
       details: `قیمت‌های مربوط به تنوع‌های محصول «${targetName}» به صورت ویرایش سریع به‌روزرسانی شد.`,
     });
 
-    // 👈 پاک‌سازی کش لیست محصولات در ویرایش سریع
     revalidatePath("/panel/products");
+    revalidatePath("/dashboard/products");
 
     return { success: true };
   } catch (err: any) {

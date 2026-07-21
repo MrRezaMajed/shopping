@@ -1,4 +1,4 @@
-// @/app/actions/crud/delete.ts (یا مسیر مشابه شما)
+// @/app/actions/crud/delete.ts
 
 "use server";
 
@@ -18,7 +18,6 @@ export async function deleteItem(model: ModelKey, id: number, permanent: boolean
 
     const itemId = Number(id);
 
-    // استخراج عنوان یا نام آیتم قبل از حذف شدن از پایگاه داده
     const targetName = await getItemDisplayName(model, itemId);
 
     if (permanent) {
@@ -29,12 +28,11 @@ export async function deleteItem(model: ModelKey, id: number, permanent: boolean
       console.log("🟢 [deleteItem] حذف فیزیکی/دائمی از دیتابیس با موفقیت انجام شد.");
       console.log("🟡 [deleteItem] در حال تلاش برای ثبت لاگ حذف دائمی...");
 
-      // ثبت لاگ حذف دائمی با نام گزینه به جای آیدی
       await logActivity({
         action: "DELETE",
         modelName: model,
         recordId: itemId,
-        targetName: targetName, // ارسال عنوان آیتم حذف شده
+        targetName: targetName,
         details: `آیتم «${targetName}» از بخش مربوطه به طور کامل و برای همیشه از دیتابیس حذف شد.`,
       });
 
@@ -107,12 +105,11 @@ export async function deleteItem(model: ModelKey, id: number, permanent: boolean
     console.log("🟢 [deleteItem] حذف نرم (Soft Delete) از دیتابیس با موفقیت انجام شد.");
     console.log("🟡 [deleteItem] در حال تلاش برای ثبت لاگ حذف نرم...");
 
-    // ثبت لاگ انتقال به سطل زباله همراه با نام گزینه
     await logActivity({
       action: "DELETE",
       modelName: model,
       recordId: itemId,
-      targetName: targetName, // ارسال عنوان آیتم منتقل شده به زباله‌دان
+      targetName: targetName,
       details: `آیتم «${targetName}» به سطل زباله بخش مدیریت منتقل شد.`,
     });
 
@@ -134,7 +131,6 @@ export async function restoreItem(model: ModelKey, id: number) {
   try {
     const itemId = Number(id);
     
-    // استخراج عنوان یا نام آیتم قبل از بازگردانی
     const targetName = await getItemDisplayName(model, itemId);
 
     if (model === "product") {
@@ -177,7 +173,8 @@ export async function restoreItem(model: ModelKey, id: number) {
         brand: "ProductBrand",
         category: "Category",
         product: "Product",
-        post: "Post" // 👈 اضافه شدن نام فیزیکی جدول پست برای اجرای پرس‌وجوهای مستقیم
+        post: "Post",
+        user: "User" // 👈 نگاشت فیزیکی جدول کاربران برای عملیات مستقیم اس‌کیوال
       };
 
       const tableName = tableNameMap[model];
@@ -204,12 +201,11 @@ export async function restoreItem(model: ModelKey, id: number) {
     console.log("🟢 [restoreItem] عملیات بازیابی در دیتابیس با موفقیت انجام شد.");
     console.log("🟡 [restoreItem] در حال تلاش برای ثبت لاگ بازیابی...");
 
-    // ثبت لاگ بازیابی موفقیت‌آمیز رویداد با نام حقیقی گزینه
     await logActivity({
       action: "RESTORE",
       modelName: model,
       recordId: itemId,
-      targetName: targetName, // ارسال عنوان بازیابی شده
+      targetName: targetName,
       details: `آیتم «${targetName}» با موفقیت از زباله‌دان بازیابی و به سیستم بازگردانده شد.`,
     });
 
@@ -230,9 +226,8 @@ async function getItemDisplayName(model: ModelKey, id: number): Promise<string> 
     const db = modelMap[model];
     if (!db) return `شناسه ${id}`;
 
-    // تشخیص دقیق نام فیلد (پست، محصول و بنر "title" دارند و برند و دسته‌بندی "name")
-    const isTitleModel = model === "product" || model === "banner" || model === "post"; // 👈 اضافه شدن مدل post
-    const selectField = isTitleModel ? "title" : "name";
+    const isTitleModel = model === "product" || model === "banner" || model === "post";
+    const selectField = isTitleModel ? "title" : "name"; // نام کاربر به دلیل name بودن اینجا به درستی استخراج می‌شود
 
     const item = await (db as any).findUnique({
       where: { id },

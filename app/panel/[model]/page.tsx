@@ -32,7 +32,9 @@ const normalizeModelParam = (param: string): string => {
     banner: "banners",
     banners: "banners",
     post: "posts",
-    posts: "posts"
+    posts: "posts",
+    user: "users",   // 👈 نرمال‌سازی یوزر مفرَد
+    users: "users"   // 👈 نرمال‌سازی یوزر جمع
   };
   return map[param.toLowerCase()] || param;
 };
@@ -79,6 +81,10 @@ export default function GenericModelPage() {
       dynamicOptions={dynamicOptions}
       hiddenOnMobile={config.hiddenOnMobile}
       filterTranslations={config.filterTranslations}
+      
+      // 👈 ارسال ویژگی‌های عدم نمایش دکمه‌ها
+      disableCreate={config.disableCreate}
+      disableEdit={config.disableEdit}
     />
   );
 }

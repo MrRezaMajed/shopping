@@ -1,4 +1,4 @@
-// بخش تگ‌های فیلترهای فعال صفحه
+// @/components/ui/CRUDPage/ActiveFilters.tsx
 
 import React from "react";
 import { FiFilter, FiX } from "react-icons/fi";
@@ -23,6 +23,7 @@ const FILTER_KEY_TRANSLATIONS: Record<string, string> = {
   categoryId: "دسته‌بندی",
   brandId: "برند",
   position: "موقعیت",
+  role: "نقش کاربری", // 👈 اضافه شد
 };
 
 const FILTER_VALUE_TRANSLATIONS: Record<string, string> = {
@@ -31,6 +32,10 @@ const FILTER_VALUE_TRANSLATIONS: Record<string, string> = {
   TOP: "بالا",
   DOWN: "پایین",
   RIGHT: "راست",
+  ADMIN: "مدیر کل",        // 👈 اضافه شد
+  SUPPORT: "پشتیبان سیستم",  // 👈 اضافه شد
+  WRITER: "نویسنده",       // 👈 اضافه شد
+  USER: "کاربر عادی",      // 👈 اضافه شد
 };
 
 export const ActiveFilters = React.memo(function ActiveFilters({

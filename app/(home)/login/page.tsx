@@ -31,11 +31,14 @@ export default function LoginPage() {
   }, [timer]);
 
   // درخواست ارسال کد به ایمیل
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOTP = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
     setLoading(true);
     setError(null);
     setMessage(null);
+    
+    // پاک کردن مقادیر قبلی کد تایید جهت آماده‌سازی برای ورود رمز جدید
+    setOtp(Array(5).fill(""));
 
     const res = await sendOTPAction(email);
     setLoading(false);
@@ -44,7 +47,7 @@ export default function LoginPage() {
       setStep(2);
       setTimer(120); // تایمر ۲ دقیقه‌ای برای ارسال مجدد
       setMessage("کد تایید با موفقیت به ایمیل شما ارسال شد.");
-      // فوکوس اتوماتیک روی اولین خانه کد بعد از رندر فیلدها
+      // فوکوس اتوماتیک روی اولین خانه کد بعد از رندر فیلدها یا ریست شدن آن‌ها
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } else {
       setError(res.error || "مشکلی پیش آمد.");
@@ -125,7 +128,7 @@ export default function LoginPage() {
           <AnimatePresence mode="wait">
             {error && (
               <motion.div
-                key="error-alert" // 👈 ویژگی کلید برای رفع خطای React اضافه شد
+                key="error-alert"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -137,7 +140,7 @@ export default function LoginPage() {
 
             {message && (
               <motion.div
-                key="success-alert" // 👈 ویژگی کلید برای رفع خطای React اضافه شد
+                key="success-alert"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -201,7 +204,7 @@ export default function LoginPage() {
               <div className="flex justify-between gap-2 max-w-[280px] mx-auto" dir="ltr">
                 {otp.map((digit, idx) => (
                   <input
-                    key={`otp-input-${idx}`} // 👈 کلید پایدارتر جایگزین شد
+                    key={`otp-input-${idx}`}
                     id={`otp-${idx}`}
                     ref={(el) => {
                       inputRefs.current[idx] = el;

@@ -2,10 +2,10 @@
 
 import * as Yup from "yup";
 import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom"; // 👈 ایمپورت پورتال ری‌اکت برای رندر خارج از جدول
+import { createPortal } from "react-dom"; 
 import { CRUDField } from "@/components/ui/CRUDPage/types";
-import { updateItem } from "@/app/actions/crud/crudActions"; // اکشن آپدیت واقعی سرور
-import { useNotification } from "@/context/NotificationContext"; // سرویس نوتیفیکیشن اختصاصی سیستم
+import { updateItem } from "@/app/actions/crud/crudActions"; 
+import { useNotification } from "@/context/NotificationContext"; 
 
 const SYSTEM_ROLES = [
   { value: "ADMIN", label: "مدیر کل", color: "bg-red-50 text-red-600 border-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50" },
@@ -21,20 +21,42 @@ const SYSTEM_PERMISSIONS = [
   { key: "view_financial", label: "مشاهده گزارش‌های مالی و تراکنش‌ها" },
 ];
 
+// 👈 کامپوننت هوشمند رندر عکس پروفایل با قابلیت مدیریت خطای بارگذاری
+const UserTableAvatar = ({ item }: { item: any }) => {
+  const [hasError, setHasError] = useState(false);
+  const initials = item.name ? item.name.substring(0, 2) : "کا";
+
+  // اگر کاربر عکس داشت و با خطا مواجه نشده بود، عکس او رندر می‌شود
+  if (item.image && !hasError) {
+    return (
+      <img
+        src={item.image}
+        alt={item.name || "User Avatar"}
+        className="w-8 h-8 rounded-full object-cover border border-slate-200/60 dark:border-zinc-700/80"
+        onError={() => setHasError(true)} // سوئیچ به حالت متنی در صورت فیلتر بودن یا خرابی لینک
+      />
+    );
+  }
+
+  // نمایش حالت متنی پیش‌فرض
+  return (
+    <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-zinc-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-[10px] font-bold">
+      {initials}
+    </div>
+  );
+};
+
 const UserRoleManagerCell = ({ item, onRefresh }: { item: any; onRefresh?: () => void }) => {
   const { addNotification } = useNotification();
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [mounted, setMounted] = useState(false); // 👈 استیت برای اطمینان از آماده بودن DOM کلاینت
+  const [mounted, setMounted] = useState(false); 
   
-  // ۱. مقداردهی اولیه نقش
   const [selectedRole, setSelectedRole] = useState(item.role || "USER");
-  
-  // ۲. جداسازی دسترسی‌های کاما-جداشده دیتابیس به صورت آرایه برای کنترل استیت
   const [permissions, setPermissions] = useState<string[]>([]);
 
   useEffect(() => {
-    setMounted(true); // فعال شدن پس از لود کامل کلاینت برای جلوگیری از خطای SSR
+    setMounted(true); 
     return () => setMounted(false);
   }, []);
 
@@ -110,7 +132,6 @@ const UserRoleManagerCell = ({ item, onRefresh }: { item: any; onRefresh?: () =>
 
   return (
     <>
-      {/* دکمه کماکان داخل جدول و ردیف مربوطه باقی می‌ماند */}
       <button
         onClick={handleOpen}
         className="relative group overflow-hidden inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 dark:bg-zinc-800 dark:hover:bg-indigo-600 text-indigo-600 hover:text-white dark:text-indigo-400 dark:hover:text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-sm active:scale-95"
@@ -121,10 +142,6 @@ const UserRoleManagerCell = ({ item, onRefresh }: { item: any; onRefresh?: () =>
         <span>نقش و دسترسی</span>
       </button>
 
-      {/* 
-        👈 رندر کردن مودال به کمک Portal مستقیماً زیر ریشه <body>
-        این کار باعث عبور مودال از بافت‌های لایه‌بندی جدول و ایجاد پوشش کامل روی سایدبار و هدر می‌شود.
-      */}
       {isAnimating && mounted && createPortal(
         <div
           className={`fixed inset-0 z-[999] flex items-center justify-center p-4 transition-opacity duration-300 text-right ${
@@ -132,7 +149,6 @@ const UserRoleManagerCell = ({ item, onRefresh }: { item: any; onRefresh?: () =>
           }`}
           dir="rtl"
         >
-          {/* بک‌دراپ کاملاً نامرئی که مانع کلیک روی هدر، سایدبار و دکمه‌های زیرین می‌شود */}
           <div 
             onClick={handleClose} 
             className="fixed inset-0 bg-transparent pointer-events-auto" 
@@ -165,9 +181,7 @@ const UserRoleManagerCell = ({ item, onRefresh }: { item: any; onRefresh?: () =>
             <div className="p-6 overflow-y-auto space-y-6 flex-1">
               {/* اطلاعات کاربر مورد نظر */}
               <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-zinc-900/40 rounded-xl border border-slate-100 dark:border-zinc-800/80">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                  {item.name ? item.name.substring(0, 2) : "کا"}
-                </div>
+                <UserTableAvatar item={item} /> {/* 👈 نمایش عکس یا آوتار در داخل مودال */}
                 <div>
                   <h4 className="font-bold text-slate-800 dark:text-zinc-200 text-sm">{item.name || "کاربر سیستم"}</h4>
                   <p className="text-[10px] text-slate-400 dark:text-zinc-500">{item.email || "بدون ایمیل"}</p>
@@ -260,7 +274,7 @@ const UserRoleManagerCell = ({ item, onRefresh }: { item: any; onRefresh?: () =>
             </div>
           </div>
         </div>,
-        document.body // 👈 الحاق فیزیکی به انتهای بدنه سند
+        document.body 
       )}
     </>
   );
@@ -285,10 +299,9 @@ export const userConfig = {
       name: "name",
       label: "کاربر",
       cellRenderer: (item: any) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-zinc-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-[10px] font-bold">
-            {item.name ? item.name.substring(0, 2) : "کا"}
-          </div>
+        <div className="flex items-center gap-2.5">
+          {/* 👈 استفاده از کامپوننت آواتار هوشمند که عکس کاربر را به صورت زنده نمایش می‌دهد */}
+          <UserTableAvatar item={item} />
           <div>
             <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
               {item.name || "کاربر ناشناس"}

@@ -1,31 +1,32 @@
+// @/components/profile/ProfileInfo.tsx
 "use client";
 
 import { FC } from "react";
-import IdentityBox from "./IdentityBox";
 import InfoCardList from "./InfoCardList";
-import LegalInfo from "./LegalInfo";
 
 interface User {
+  id?: number;
   name: string;
-  nationalId: string;
+  email?: string | null;
   mobile: string;
-  email?: string;
-  birthday?: string;
-  job?: string;
-  economicCode?: string;
-  disability?: string;
+  image?: string | null;
 }
 
 interface ProfileInfoProps {
-  user: User;
+  user?: User | null;
 }
 
 const ProfileInfo: FC<ProfileInfoProps> = ({ user }) => {
+  const fallbackUser: User = user || {
+    name: "کاربر مهمان",
+    mobile: "",
+    email: ""
+  };
+
   return (
-    <div className="w-full space-y-6">
-      <IdentityBox />
-      <InfoCardList user={user} />
-      <LegalInfo />
+    <div className="w-full">
+      {/* حذف شدن تایید هویت و باکس حقوقی اضافی به درخواست شما */}
+      <InfoCardList user={fallbackUser} />
     </div>
   );
 };

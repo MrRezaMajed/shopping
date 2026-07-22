@@ -45,10 +45,10 @@ const navItems: NavItem[] = [
     icon: <FiGrid className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
     name: "محتوا", 
     subItems: [
-      { name: "بنرها", path: "/dashboard/content/banners" },
-      { name: "دسته‌بندی‌ها", path: "/dashboard/content/categories" },
-      { name: "برندها", path: "/dashboard/content/product-brands" },
-      { name: "محصولات", path: "/dashboard/content/products" }
+      { name: "بنرها", path: "/panel/banners" },
+      { name: "دسته‌بندی‌ها", path: "/panel/categories" },
+      { name: "برندها", path: "/panel/brands" },
+      { name: "محصولات", path: "/panel/products" }
     ] 
   },
   { 

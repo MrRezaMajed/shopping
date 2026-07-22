@@ -1,113 +1,199 @@
 // @/lib/auth.ts
 
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, DefaultSession, DefaultUser } from "next-auth";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id?: string;
+      role?: string;
+      permissions?: string[];
+    } & DefaultSession["user"];
+  }
+
+  interface User extends DefaultUser {
+    role?: string;
+    permissions?: string[];
+    status?: string;
+    password?: string | null;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string;
+    role?: string;
+    permissions?: string[];
+    picture?: string | null; 
+  }
+}
+
 export const authOptions: NextAuthOptions = {
-  // اتصال به پایگاه‌داده پریزما جهت ذخیره‌سازی نشست‌ها و اطلاعات کاربران
   adapter: PrismaAdapter(prisma),
   
   providers: [
-    // نمونه ارائه‌دهنده گوگل (OAuth)
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     }),
-    // نمونه ارائه‌دهنده گیت‌هاب (OAuth)
     GithubProvider({
       clientId: process.env.GITHUB_ID || "",
       clientSecret: process.env.GITHUB_SECRET || "",
     }),
     
-    // نمونه ارائه‌دهنده ورود سنتی با ایمیل/موبایل و رمزعبور
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "ایمیل یا موبایل", type: "text" },
-        password: { label: "رمز عبور", type: "password" }
+        email: { label: "ایمیل", type: "email" },
+        code: { label: "کد تایید", type: "text" }
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) {
-          throw new Error("لطفاً اطلاعات ورود را وارد نمایید.");
+        console.log("--- [Authorize Action Triggered] ---");
+        if (!credentials?.email || !credentials?.code) {
+          throw new Error("لطفاً ایمیل و کد تایید را وارد نمایید.");
         }
 
-        // جستجوی کاربر در دیتابیس
-        const user = await prisma.user.findFirst({
+        const email = credentials.email.toLowerCase().trim();
+        const code = credentials.code;
+
+        const verification = await prisma.verificationToken.findFirst({
           where: {
-            OR: [
-              { email: credentials.username },
-              { mobile: credentials.username }
-            ]
+            identifier: email,
+            token: code,
+            expires: { gt: new Date() } 
           }
         });
 
-        if (!user || !user.password) {
-          throw new Error("کاربری با این مشخصات یافت نشد.");
+        if (!verification) {
+          console.log("❌ کد تایید اشتباه یا منقضی است.");
+          throw new Error("کد تایید وارد شده اشتباه یا منقضی شده است.");
         }
 
-        // در صورت استفاده از bcrypt برای بررسی رمز عبور:
-        // const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-        const isPasswordValid = credentials.password === user.password; // جایگزین با متد مقایسه رمزنگاری شما
+        await prisma.verificationToken.deleteMany({
+          where: { identifier: email },
+        });
 
-        if (!isPasswordValid) {
-          throw new Error("رمز عبور وارد شده اشتباه است.");
+        let user = await prisma.user.findUnique({
+          where: { email }
+        });
+
+        // تولید لینک هوشمند عکس (فقط در صورتی کار می‌کند که ایمیل در Gravatar ثبت شده باشد)
+        const googleImage = `https://unavatar.io/${email}`;
+        console.log("📷 آدرس تصویر تولید شده برای فرم:", googleImage);
+
+        if (!user) {
+          console.log("📝 کاربر جدید پیدا نشد، در حال ثبت‌نام...");
+          user = await prisma.user.create({
+            data: {
+              email,
+              name: email.split("@")[0],
+              image: googleImage,
+              status: "ACTIVE"
+            }
+          });
+          console.log("✅ کاربر جدید با تصویر پیش‌فرض ساخته شد:", user.email);
+        } else if (!user.image || (typeof user.image === "string" && user.image.startsWith("https://unavatar.io"))) {
+          console.log("🔄 کاربر قدیمی پیدا شد، در حال بررسی به‌روزرسانی تصویر...");
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: { image: googleImage }
+          });
         }
 
-        if (user.status === "INACTIVE") {
-          throw new Error("حساب کاربری شما غیرفعال یا مسدود شده است.");
-        }
-
-        return user as any;
+        return user;
       }
     })
   ],
 
   session: {
-    strategy: "jwt", // استفاده از استراتژی توکن امن JWT برای نشست‌ها
-    maxAge: 30 * 24 * 60 * 60, // انقضای نشست پس از ۳۰ روز
+    strategy: "jwt", 
+    maxAge: 30 * 24 * 60 * 60, 
   },
 
   callbacks: {
+    async signIn({ user, account, profile }) {
+      console.log("--- [SignIn Callback Triggered] ---");
+      console.log("Provier:", account?.provider);
+      
+      if (account?.provider === "google" && user.email) {
+        // دریافت صحیح آدرس عکس از پروفایل گوگل
+        const googleImage = (profile as any)?.picture || user.image;
+        console.log("📷 آدرس واقعی تصویر جیمیل دریافت شده از گوگل:", googleImage);
+
+        if (googleImage) {
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { email: user.email },
+              select: { id: true, image: true }
+            });
+
+            if (dbUser) {
+              console.log("👤 کاربر در دیتابیس یافت شد. تصویر فعلی دیتابیس:", dbUser.image);
+              if (dbUser.image !== googleImage) {
+                await prisma.user.update({
+                  where: { id: dbUser.id },
+                  data: { image: googleImage }
+                });
+                console.log("💾 عکس جدید گوگل با موفقیت در دیتابیس ذخیره شد.");
+              } else {
+                console.log("ℹ️ عکس جدید با عکس دیتابیس یکی است، نیازی به آپدیت نیست.");
+              }
+            } else {
+              console.log("⚠️ کاربر هنوز در دیتابیس ایجاد نشده است (این مورد در اولین لاگین طبیعی است و ادپتر آن را می‌سازد).");
+            }
+          } catch (error) {
+            console.error("❌ خطا در ذخیره عکس جیمیل:", error);
+          }
+        }
+      }
+      return true;
+    },
+
     async jwt({ token, user }) {
-      // اگر کاربر برای بار اول لاگین کرده باشد، مقادیر اولیه را ذخیره می‌کنیم
       if (user) {
-        token.role = (user as any).role;
-        token.permissions = (user as any).permissions;
         token.id = user.id;
+        token.role = user.role;
+        token.permissions = user.permissions;
+        token.picture = user.image; 
+        console.log("🔑 توکن جدید ساخته شد با آدرس تصویر:", token.picture);
       } else if (token.id) {
-        // 👈 استعلام زنده تغییرات نقش و دسترسی در هر بار لود، جهت همگام‌سازی بلادرنگ تغییرات پنل مدیریت [1]
+        const isNumeric = !isNaN(Number(token.id));
+        const userId = isNumeric ? Number(token.id) : token.id;
+        
         const dbUser = await prisma.user.findUnique({
-          where: { id: Number(token.id) },
-          select: { role: true, permissions: true }
+          where: { id: userId as any },
+          select: { role: true, permissions: true, image: true } 
         });
         
         if (dbUser) {
           token.role = dbUser.role;
           token.permissions = dbUser.permissions;
+          token.picture = dbUser.image; 
         }
       }
       return token;
     },
 
     async session({ session, token }) {
-      // پاس دادن مقادیر پویای نقش و دسترسی به فرانت‌اند (کلاینت)
       if (token && session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-        (session.user as any).permissions = token.permissions;
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.permissions = token.permissions;
+        session.user.image = token.picture; 
       }
       return session;
     }
   },
 
   pages: {
-    signIn: "/auth/signin", // مسیر سفارشی صفحه لاگین شما (اختیاری)
-    error: "/auth/error",   // مسیر سفارشی خطاهای احراز هویت (اختیاری)
+    signIn: "/auth/signin", 
+    error: "/auth/error",   
   },
 
-  secret: process.env.NEXTAUTH_SECRET, // کلید امنیتی اختصاصی سشن‌ها در فایل .env
+  secret: process.env.NEXTAUTH_SECRET, 
 };

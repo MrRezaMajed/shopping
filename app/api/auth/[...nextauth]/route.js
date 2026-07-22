@@ -80,28 +80,38 @@ export const authOptions = {
     }),
   ],
   session: {
-    strategy: "jwt", // استفاده هوشمندانه از JWT برای مدیریت سریع نشست‌ها
+    strategy: "jwt", // استفاده از JWT برای مدیریت سریع نشست‌ها
   },
-  // این بخش اضافه شد تا در صورت نیاز به ورود، کاربر مستقیماً به صفحه اختصاصی شما هدایت شود
   pages: {
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;               // 👈 حذف کدهای تایپ‌اسکریپت
-        token.permissions = user.permissions; // 👈 حذف کدهای تایپ‌اسکریپت
-      } else if (token.id) {
-        // استعلام زنده تغییرات نقش و دسترسی در هر بار لود جهت همگام‌سازی بلادرنگ تغییرات پنل مدیریت [1]
+        token.role = user.role;               
+        token.permissions = user.permissions; 
+        token.name = user.name;                     
+        token.picture = user.image || user.avatar;  
+      } 
+      // 👈 تریگرهای آپدیت یا ثبت نام جدید برای حذف کامل کوئری دیتابیس در لودهای عادی
+      else if (trigger === "update" || trigger === "signUp") {
         const dbUser = await prisma.user.findUnique({
           where: { id: Number(token.id) },
-          select: { role: true, permissions: true }
+          select: { 
+            role: true, 
+            permissions: true,
+            name: true,           
+            image: true,          
+            avatar: true          
+          }
         });
         
         if (dbUser) {
           token.role = dbUser.role;
           token.permissions = dbUser.permissions;
+          token.name = dbUser.name;                           
+          token.picture = dbUser.image || dbUser.avatar;      
         }
       }
       return token;
@@ -109,8 +119,10 @@ export const authOptions = {
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token.id;
-        session.user.role = token.role;               // 👈 حذف کدهای تایپ‌اسکریپت
-        session.user.permissions = token.permissions; // 👈 حذف کدهای تایپ‌اسکریپت
+        session.user.role = token.role;               
+        session.user.permissions = token.permissions; 
+        session.user.name = token.name;       
+        session.user.image = token.picture;   
       }
       return session;
     },

@@ -1,39 +1,42 @@
 // UserDropdown.tsx
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 import { FiUser, FiSettings, FiHelpCircle, FiLogOut } from "react-icons/fi";
-import { useSession, signOut } from "next-auth/react"; // 👈 اضافه شدن ابزارهای نشست و خروج NextAuth
+import { useSession, signOut } from "next-auth/react"; 
 
 type Accent = "indigo" | "emerald" | "rose" | "amber";
 
-const userDropdownAccentStyles: Record<Accent, { hoverBg: string; hoverBorder: string; ringColor: string; groupHoverText: string }> = {
+const userDropdownAccentStyles: Record<Accent, { hoverBg: string; hoverBorder: string; ringColor: string; groupHoverText: string; avatarBg: string }> = {
   indigo: {
     hoverBg: "hover:bg-[#465fff]/8 dark:hover:bg-[#465fff]/10",
     hoverBorder: "hover:border-[#465fff]",
     ringColor: "ring-[#465fff]",
-    groupHoverText: "group-hover:!text-[#465fff]"
+    groupHoverText: "group-hover:!text-[#465fff]",
+    avatarBg: "from-[#465fff] to-[#2b3ebb]"
   },
   emerald: {
     hoverBg: "hover:bg-[#10b981]/8 dark:hover:bg-[#10b981]/10",
     hoverBorder: "hover:border-[#10b981]",
     ringColor: "ring-[#10b981]",
-    groupHoverText: "group-hover:!text-[#10b981]"
+    groupHoverText: "group-hover:!text-[#10b981]",
+    avatarBg: "from-[#10b981] to-[#047857]"
   },
   rose: {
     hoverBg: "hover:bg-[#f43f5e]/8 dark:hover:bg-[#f43f5e]/10",
     hoverBorder: "hover:border-[#f43f5e]",
     ringColor: "ring-[#f43f5e]",
-    groupHoverText: "group-hover:!text-[#f43f5e]"
+    groupHoverText: "group-hover:!text-[#f43f5e]",
+    avatarBg: "from-[#f43f5e] to-[#be123c]"
   },
   amber: {
-    hoverBg: "hover:bg-[#f59e0b]/8 dark:hover:bg-[#f59e0b]/10",
-    hoverBorder: "hover:border-[#f59e0b]",
-    ringColor: "ring-[#f59e0b]",
-    groupHoverText: "group-hover:!text-[#f59e0b]"
+    hoverBg: "hover:bg-[#ea580c]/8 dark:hover:bg-[#ea580c]/10",
+    hoverBorder: "hover:border-[#ea580c]",
+    ringColor: "ring-[#ea580c]",
+    groupHoverText: "group-hover:!text-[#ea580c]",
+    avatarBg: "from-[#f97316] to-[#d97706]" // 👈 تصحیح گرادینت به نارنجی گرم و عمیق دقیقاً مشابه تصویر شما
   }
 };
 
@@ -44,7 +47,7 @@ export default function UserDropdown() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   
   const { accent } = useTheme();
-  const { data: session } = useSession(); // 👈 واکشی اطلاعات نشست کاربر فعلی
+  const { data: session } = useSession(); 
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
@@ -73,15 +76,12 @@ export default function UserDropdown() {
     }
   };
 
-  // دریافت نام نمایشی کامل و بخش اول ایمیل به عنوان نام جایگزین
   const displayName = 
     session?.user?.name || 
     session?.user?.email?.split("@")[0] || 
     "پروفایل کاربری";
 
-  // استخراج بخش اول نام برای نمایش مختصر در دکمه بالایی هدر
   const shortName = session?.user?.name ? session.user.name.split(" ")[0] : displayName;
-
   const displayEmail = session?.user?.email || "بدون ایمیل";
 
   const dropdownVariants = {
@@ -142,6 +142,9 @@ export default function UserDropdown() {
 
   const styles = userDropdownAccentStyles[accent as Accent] || userDropdownAccentStyles.indigo;
 
+  // بررسی معتبر بودن تصویر (عدم استفاده از آواتار پیش‌فرض و موقت)
+  const hasValidImage = session?.user?.image && !session.user.image.startsWith("https://unavatar.io");
+
   return (
     <div
       className="relative"
@@ -162,29 +165,26 @@ export default function UserDropdown() {
         aria-expanded={isOpen}
         className="flex items-center !text-slate-700 dark:!text-slate-300 hover:!text-slate-900 dark:hover:!text-white transition-colors group"
       >
-        <span className={`mr-3 overflow-hidden rounded-full h-11 w-11 border transition-all duration-300 transform group-hover:scale-105 ${
+        <span className={`mr-3 overflow-hidden rounded-full h-11 w-11 border flex items-center justify-center transition-all duration-300 transform group-hover:scale-105 ${
           isOpen 
             ? `ring-2 ring-offset-2 dark:ring-offset-[#0c0d14] ${styles.ringColor}` 
             : 'border-slate-200/50 dark:border-[#1f2235]/60'
         }`}>
-          {/* 👈 در صورت وجود تصویر آواتار خارجی از تگ img و در غیر این صورت از تصویر تستی استفاده می‌شود */}
-          {session?.user?.image ? (
+          {/* نمایش هوشمند تصویر یا آواتار نارنجی دقیقاً مشابه تصویر فرستاده شده شما */}
+          {hasValidImage ? (
             <img
               src={session.user.image}
               alt={displayName}
               className="object-cover w-full h-full rounded-full"
             />
           ) : (
-            <Image
-              width={44}
-              height={44}
-              src="/images/user/owner.jpg"
-              alt="User"
-              className="object-cover w-full h-full"
-            />
+            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${styles.avatarBg} text-white font-extrabold text-[17px] shadow-inner select-none rounded-full`}>
+              {/* 👈 تولید هوشمند کاراکتر اول به صورت بزرگ و بولد (مثلاً کاراکتر 6 برای یوزرنیم شما) */}
+              {displayName.charAt(0).toUpperCase()}
+            </div>
           )}
         </span>
-        {/* 👈 نمایش داینامیک نام مختصر کاربر لاگین شده به جای کلمه ثابت پیام */}
+        
         <span className="block mr-1 font-bold text-sm transition-colors group-hover:!text-slate-950 dark:group-hover:!text-white">
           {shortName}
         </span>
@@ -218,13 +218,11 @@ export default function UserDropdown() {
             variants={dropdownVariants}
             className="absolute left-0 mt-3 w-58 flex flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:border-[#1f2235] dark:bg-[#0c0d14] backdrop-blur-3xl z-50 text-right origin-top-left"
           >
-            {/* کارت مشخصات کاربر با تحکیم و اجبار اولویت رنگ متون */}
+            {/* کارت مشخصات کاربر */}
             <div className="bg-slate-50/50 dark:bg-[#121420]/60 p-2.5 rounded-xl border border-slate-100 dark:border-[#1f2235]/40 mb-2.5">
-              {/* 👈 جایگزین شدن نام کامل کاربر لاگین شده */}
               <span className="block font-extrabold !text-slate-800 dark:!text-slate-100 text-[13px] truncate">
                 {displayName}
               </span>
-              {/* 👈 جایگزین شدن ایمیل واقعی کاربر لاگین شده */}
               <span className="mt-0.5 block text-[11px] font-semibold !text-slate-400 dark:!text-slate-400 truncate">
                 {displayEmail}
               </span>
@@ -257,7 +255,7 @@ export default function UserDropdown() {
             {/* دکمه خروج */}
             <motion.div variants={itemVariants} className="mt-2">
               <button
-                onClick={() => signOut({ callbackUrl: "/login" })} // 👈 هدایت خودکار پس از خروج موفقیت‌آمیز به صفحه لاگین
+                onClick={() => signOut({ callbackUrl: "/login" })} 
                 className="
                   w-full flex items-center gap-3 px-3 py-2.5 font-bold rounded-xl text-xs sm:text-sm transition-all duration-200 text-right
                   !text-[#f43f5e] border-r-2 border-transparent

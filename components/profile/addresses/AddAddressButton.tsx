@@ -1,3 +1,6 @@
+// components/profile/addresses/AddAddressButton.tsx
+"use client";
+
 import { FaPlus } from "react-icons/fa";
 
 type AddAddressButtonProps = {
@@ -9,11 +12,10 @@ export default function AddAddressButton({ onOpen }: AddAddressButtonProps) {
     <button
       onClick={onOpen}
       className="
-        bg-blue-600 dark:bg-blue-500 text-white 
-        w-full py-3 rounded-2xl flex items-center justify-center gap-2 mt-6 
-        font-semibold text-sm transition-all duration-250
-        hover:bg-blue-700 dark:hover:bg-blue-600 
-        shadow-sm hover:shadow-md active:scale-[0.98]
+        bg-blue-600 hover:bg-blue-700 active:scale-[0.98]
+        dark:bg-blue-500 dark:hover:bg-blue-600 
+        text-white text-sm font-semibold px-5 py-3 rounded-xl 
+        flex items-center justify-center gap-2 transition-all duration-200 shadow-sm w-full sm:w-auto
       "
     >
       <FaPlus className="text-xs" />

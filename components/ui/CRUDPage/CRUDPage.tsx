@@ -438,7 +438,7 @@ export default function CRUDPage({
         style={{ animationDuration: "10s" }}
       />
 
-      <div className="relative w-full mx-auto p-4 md:p-6 lg:p-8 z-10 transition-all duration-500 max-w-[1400px]">
+      <div className="relative w-full mx-auto  z-10 transition-all duration-500 max-w-[1400px]">
         <AnimatePresence mode="wait">
           <motion.div
             key="list"
@@ -459,7 +459,7 @@ export default function CRUDPage({
               {!showTrash && !disableCreate && <CreateButton onClick={handleCreate} label={`ایجاد ${modelName} جدید`} />}
             </CRUDPageHeader>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 ml-0.5">
               {model === "product" ? (
                 <>
                   <StatCard

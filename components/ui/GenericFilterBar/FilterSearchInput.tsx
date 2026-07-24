@@ -1,6 +1,3 @@
-// سلول فیلتر از نوع کادر جستجو (Search Input)
-
-
 import React from "react";
 import { motion } from "framer-motion";
 import { FiSearch } from "react-icons/fi";
@@ -23,18 +20,27 @@ export const FilterSearchInput = React.memo(function FilterSearchInput({
   return (
     <motion.div
       key={fieldKey}
-      initial={{ opacity: 0, x: -10 }}
+      initial={{ opacity: 0, x: -6 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: idx * 0.05 }}
+      transition={{ duration: 0.15, delay: idx * 0.03 }}
       className="relative flex-1 w-full group"
     >
-      <FiSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-cyan-500 transition-colors duration-300" />
+      <FiSearch className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-500 transition-colors duration-200 text-xs" />
       <input
         type="text"
         placeholder={placeholder || "جستجو..."}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full pr-11 pl-4 py-3 rounded-2xl border border-slate-200 dark:border-[#1f2235] bg-white/70 dark:bg-[#121420]/70 backdrop-blur-md text-slate-700 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 hover:bg-white/80 dark:hover:bg-[#1b1e30] hover:border-cyan-400/70 dark:hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 dark:hover:shadow-cyan-500/20 transition-all duration-300 shadow-sm"
+        className="
+          w-full h-9 pr-10 pl-4 py-1 rounded-lg text-xs font-medium
+          border border-slate-200 dark:border-zinc-800/80
+          bg-white/50 dark:bg-zinc-950/30 backdrop-blur-sm 
+          text-slate-700 dark:text-slate-300
+          placeholder:text-slate-400 dark:placeholder:text-zinc-600
+          focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/40
+          hover:border-slate-300 dark:hover:border-zinc-700/80
+          transition-all duration-200
+        "
       />
     </motion.div>
   );

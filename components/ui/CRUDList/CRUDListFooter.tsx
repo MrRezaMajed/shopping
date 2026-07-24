@@ -27,9 +27,9 @@ export const CRUDListFooter = React.memo(function CRUDListFooter({
   return (
     <div
       className="
-        grid grid-cols-1 md:grid-cols-3 items-center gap-5 p-5 sm:p-6
-        bg-slate-50/50 dark:bg-[#0c0d14]/40
-        border-t border-slate-100 dark:border-slate-800/40
+        grid grid-cols-1 md:grid-cols-3 items-center gap-3.5 p-3.5 sm:py-4 sm:px-6
+        bg-slate-50/30 dark:bg-[#0c0d14]/20
+        border-t border-slate-200/30 dark:border-slate-900/50
         text-xs sm:text-sm text-slate-500 dark:text-slate-400
       "
     >
@@ -50,7 +50,7 @@ export const CRUDListFooter = React.memo(function CRUDListFooter({
       </div>
 
       <div className="hidden md:block justify-self-end text-xs font-medium text-slate-400 dark:text-slate-500">
-        مجموع کل: <span className="font-semibold text-slate-700 dark:text-slate-300">{toPersianNumber(total)}</span> مورد
+        مجموع کل: <span className="font-semibold text-slate-700 dark:text-slate-300 font-mono tracking-tight">{toPersianNumber(total)}</span> مورد
       </div>
     </div>
   );

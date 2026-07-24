@@ -1,6 +1,3 @@
-// بخش هدر فیلتر در موبایل (کلاپس یا بازشو)
-
-
 import React from "react";
 import { motion } from "framer-motion";
 import { FiFilter, FiChevronDown } from "react-icons/fi";
@@ -17,17 +14,17 @@ export const MobileFilterHeader = React.memo(function MobileFilterHeader({
   return (
     <div
       onClick={onClick}
-      className="flex items-center justify-between p-4 md:hidden cursor-pointer hover:bg-white/30 dark:hover:bg-[#121420]/30 transition rounded-t-3xl"
+      className="flex items-center justify-between p-3 md:hidden cursor-pointer hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors duration-150 rounded-t-xl"
     >
       <div className="flex items-center gap-2">
-        <FiFilter className="text-slate-500 dark:text-slate-400" />
-        <span className="font-medium text-slate-700 dark:text-slate-200">فیلترها</span>
+        <FiFilter className="text-slate-500 dark:text-slate-400 text-xs" />
+        <span className="font-semibold text-xs text-slate-700 dark:text-slate-300">فیلترها</span>
       </div>
       <motion.div
         animate={{ rotate: showFilters ? 180 : 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.2 }}
       >
-        <FiChevronDown className="text-slate-500 dark:text-slate-400" />
+        <FiChevronDown className="text-slate-500 dark:text-slate-400 text-xs" />
       </motion.div>
     </div>
   );

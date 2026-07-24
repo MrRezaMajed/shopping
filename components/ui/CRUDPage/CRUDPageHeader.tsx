@@ -47,7 +47,7 @@ export const CRUDPageHeader = React.memo(function CRUDPageHeader({
         </p>
       </div>
       
-      <div className="flex gap-3 flex-wrap items-center">
+      <div className="flex gap-3 flex-wrap items-center ml-1">
         {children}
       </div>
     </div>

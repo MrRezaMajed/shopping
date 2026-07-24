@@ -1,3 +1,5 @@
+/* globals.css */
+
 @import "tailwindcss";
 
 /* ۱. مخفی کردن نوار اسکرول سراسری مرورگر با حفظ قابلیت اسکرول */
@@ -401,9 +403,10 @@ html {
   font-display: swap;
 }
 
+/* پالت رنگ سراسری بازسازی شده با رویکرد Obsidian Midnight */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc; /* سفید ساتنی نرم و باکیفیت */
+  --foreground: #0f172a; /* Slate 900 برای خوانایی ایده‌آل متن */
 }
 
 @theme inline {
@@ -415,9 +418,15 @@ html {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #080a10; /* تم عمیق و مجلل Obsidian Midnight */
+    --foreground: #f1f5f9; /* نقره‌ای نرم برای جلوگیری از خستگی چشم */
   }
+}
+
+/* تم دارک اعمالی به صورت کلاس دستی جاوااسکریپتی */
+.dark {
+  --background: #080a10;
+  --foreground: #f1f5f9;
 }
 
 body {
@@ -442,20 +451,20 @@ html {
 
 /* ۵. لایه‌بندی ساختاری و متغیرهای رنگ مایه (Accent Colors) */
 @layer base {
-  /* پالت اول: تم نیلگون (Indigo - پیش‌فرض سیستم) */
+  /* پالت اول: تم نیلگون (Indigo - پیش‌فرض سیستم با کیفیت ارتقایافته) */
   :root, html {
-    --brand-25: #f2f7ff;
-    --brand-50: #ecfdf5; /* تصحیح بر اساس نیاز تلویند v4 در صورت لزوم */
-    --brand-100: #dde9ff;
-    --brand-200: #c2d6ff;
-    --brand-300: #9cb9ff;
-    --brand-400: #7592ff;
-    --brand-500: #465fff;
-    --brand-600: #3641f5;
-    --brand-700: #2a31d8;
-    --brand-800: #252dae;
-    --brand-900: #262e89;
-    --brand-950: #161950;
+    --brand-25: #f4f6ff;
+    --brand-50: #eef2ff;
+    --brand-100: #e0e7ff;
+    --brand-200: #c7d2fe;
+    --brand-300: #a5b4fc;
+    --brand-400: #818cf8;
+    --brand-500: #6366f1;
+    --brand-600: #4f46e5;
+    --brand-700: #4338ca;
+    --brand-800: #3730a3;
+    --brand-900: #312e81;
+    --brand-950: #1e1b4b;
   }
 
   /* پالت دوم: تم زمرّد (Emerald - سبز درخشان) */
@@ -513,6 +522,15 @@ html {
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
+  
+  .dark *,
+  .dark ::after,
+  .dark ::before,
+  .dark ::backdrop,
+  .dark ::file-selector-button {
+    border-color: rgba(30, 41, 59, 0.5); /* مرزهای ظریف نوری برای حالت تیره */
+  }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
@@ -607,4 +625,19 @@ html {
 
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #344054;
+}
+
+/* ۷. افزودن ابزارهای شیشه‌ای (Glassmorphism Utilities) هماهنگ با تلویند v4 */
+@utility glass-effect {
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(241, 245, 249, 0.6);
+}
+
+.dark .glass-effect {
+  background-color: rgba(8, 10, 16, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 41, 59, 0.5);
 }

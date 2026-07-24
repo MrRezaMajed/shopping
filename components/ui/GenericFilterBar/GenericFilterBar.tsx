@@ -1,8 +1,5 @@
-// کامپوننت تجمیع‌کننده والد اصلی
-
-
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX } from "react-icons/fi";
 import useMediaQuery from "@/hooks/useMediaQuery";
@@ -54,17 +51,24 @@ export default function GenericFilterBar<T extends Record<string, any>>({
     setLocalFilters(cleared);
   }, [fields]);
 
+  // بررسی فعال بودن فیلترها جهت نمایش هوشمند دکمه ریست
+  const hasActiveFilter = useMemo(() => {
+    return Object.values(localFilters).some(val => val !== undefined && val !== "");
+  }, [localFilters]);
+
   const shouldShowFilters = isDesktop || showFilters;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className={`relative mb-8 rounded-3xl border border-slate-200/50 dark:border-[#1f2235]/40 bg-white/60 dark:bg-[#0c0d14]/40 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.02)] dark:shadow-[0_12px_45px_rgba(0,0,0,0.45)] transition-all duration-300 ${className}`}
+      transition={{ duration: 0.3 }}
+      className={`
+        relative rounded-xl border border-slate-200/50 dark:border-zinc-800/50 
+        bg-white/50 dark:bg-zinc-950/40 backdrop-blur-md 
+        transition-all duration-300 ${className}
+      `}
     >
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-cyan-500/5 to-indigo-500/5 pointer-events-none" />
-
       <MobileFilterHeader 
         showFilters={showFilters} 
         onClick={() => setShowFilters(prev => !prev)} 
@@ -76,10 +80,11 @@ export default function GenericFilterBar<T extends Record<string, any>>({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="relative flex flex-col md:flex-row gap-5 items-center p-6">
+            {/* کاهش پدینگ داخلی از p-6 به p-3 در دسکتاپ جهت فشرده‌سازی ارتفاع */}
+            <div className="relative flex flex-col md:flex-row gap-2.5 items-center p-3 sm:px-4">
               {fields.map((field, idx) => {
                 if (field.type === "search") {
                   return (
@@ -111,16 +116,34 @@ export default function GenericFilterBar<T extends Record<string, any>>({
                 return null;
               })}
 
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={handleReset}
-                withRipple
-                iconLeft={<FiX className="text-base" />}
-                className="w-full md:w-auto px-5 bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-[#1b1e30] dark:text-slate-200 dark:hover:bg-[#25283d] transition-colors duration-200"
-              >
-                ریست
-              </Button>
+              {/* دکمه ریست مینیاتوری و فوق‌العاده مدرن (نمایش فقط در صورت لزوم) */}
+              <AnimatePresence>
+                {hasActiveFilter && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-full md:w-auto"
+                  >
+                    <Button
+                      variant="ghost"
+                      onClick={handleReset}
+                      withRipple
+                      iconLeft={<FiX className="text-sm" />}
+                      className="
+                        w-full md:w-auto h-9 px-3.5 rounded-lg text-xs font-semibold
+                        bg-slate-100 dark:bg-zinc-900 
+                        text-slate-600 dark:text-zinc-300 
+                        hover:bg-slate-200 dark:hover:bg-zinc-800
+                        transition-all duration-150
+                      "
+                    >
+                      ریست
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}

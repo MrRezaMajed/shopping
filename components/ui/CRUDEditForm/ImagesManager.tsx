@@ -1,31 +1,25 @@
+// components/ImagesManager.tsx
 "use client";
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
 import { useFormikContext } from "formik";
-import { FiImage, FiUpload, FiStar, FiTrash2 } from "react-icons/fi";
-import { AnimatePresence } from "framer-motion";
+import { FiImage, FiUpload, FiStar, FiTrash2, FiSquare, FiSliders, FiLoader } from "react-icons/fi";
 import { SectionPanel } from "./SectionPanel";
 import { EmptyState } from "./EmptyState";
-import ImageCropperModal from "../ImageCropper/ImageCropperModal";
-import { toPersianNumber } from "@/lib/utils/persianNumbers";
+import { autoSmartCrop } from "@/lib/utils/smartcrop"; // فراخوانی تابع کراپ هوشمند
 
 interface ImagesManagerProps {
   name: string;
-}
-
-interface CropQueueItem {
-  file: File;
-  previewUrl: string;
 }
 
 export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesManagerProps) {
   const { values, setFieldValue } = useFormikContext<any>();
   const images: any[] = values[name] || [];
 
-  // صف‌بندی هوشمند کلاینت برای تصاویری که در صفِ کراپ کردن قرار دارند
-  const [cropQueue, setCropQueue] = useState<CropQueueItem[]>([]);
-  const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1);
+  // انتخاب دستی نسبت تصویر فعال قبل از آپلود (۱ برای مربعی، ۱۶:۹ برای بنر)
+  const [activeUploadRatio, setActiveUploadRatio] = useState<number>(1);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,60 +27,37 @@ export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesM
       if (!fileList || fileList.length === 0) return;
 
       const files = Array.from(fileList);
-      
-      // ساخت لیست تصاویر خام انتخابی برای صف برش
-      const queueItems = files.map((file) => ({
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }));
+      setIsProcessing(true);
 
-      setCropQueue(queueItems);
-      setCurrentQueueIndex(0); // شروع پروسه برش از اولین عکسِ صف
-      e.target.value = "";
+      try {
+        const processedItems = await Promise.all(
+          files.map(async (file) => {
+            // ۱. محاسبه خودکار طول و عرض هدف بر اساس انتخاب کاربر
+            const targetWidth = activeUploadRatio === 1 ? 800 : 1200;
+            const targetHeight = Math.round(targetWidth / activeUploadRatio);
+
+            // ۲. اجرای فرآیند برش کاملاً هوشمند بدون نمایش مودال
+            const croppedFile = await autoSmartCrop(file, targetWidth, targetHeight);
+            
+            return {
+              url: URL.createObjectURL(croppedFile),
+              isMain: images.length === 0,
+              ratio: activeUploadRatio, // ذخیره نسبت ابعاد جهت نمایش بهینه در پیش‌نمایش
+              file: croppedFile,
+            };
+          })
+        );
+
+        setFieldValue(name, [...images, ...processedItems]);
+      } catch (error) {
+        console.error("خطا در پردازش خودکار تصویر:", error);
+      } finally {
+        setIsProcessing(false);
+        e.target.value = "";
+      }
     },
-    []
+    [images, name, setFieldValue, activeUploadRatio]
   );
-
-  const handleCroppedItem = (croppedFile: File) => {
-    // ایجاد ساختار نهایی گالری متناسب با عکس اصلاح شده
-    const croppedUrl = URL.createObjectURL(croppedFile);
-    const newGalleryItem = {
-      url: croppedUrl,
-      isMain: images.length === 0, // اگر اولین عکس گالری بود، عکس اصلی شود
-      file: croppedFile,
-    };
-
-    // اضافه کردن آیتم به تصاویر فرم گالری
-    setFieldValue(name, [...images, newGalleryItem]);
-
-    // آزادسازی منابع موقتی عکس قبلی صف
-    if (cropQueue[currentQueueIndex]) {
-      URL.revokeObjectURL(cropQueue[currentQueueIndex].previewUrl);
-    }
-
-    // هدایت سیستم به عکس بعدی صف
-    if (currentQueueIndex < cropQueue.length - 1) {
-      setCurrentQueueIndex((prev) => prev + 1);
-    } else {
-      // اتمام صف‌بندی و بستن مودال‌ها
-      setCropQueue([]);
-      setCurrentQueueIndex(-1);
-    }
-  };
-
-  const handleCancelCrop = () => {
-    // لغو برش عکس فعلی و انتقال به عکس بعدی صف
-    if (cropQueue[currentQueueIndex]) {
-      URL.revokeObjectURL(cropQueue[currentQueueIndex].previewUrl);
-    }
-
-    if (currentQueueIndex < cropQueue.length - 1) {
-      setCurrentQueueIndex((prev) => prev + 1);
-    } else {
-      setCropQueue([]);
-      setCurrentQueueIndex(-1);
-    }
-  };
 
   const handleRemove = useCallback(
     (idx: number) => {
@@ -107,28 +78,79 @@ export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesM
     [images, name, setFieldValue]
   );
 
-  const activeCropItem = currentQueueIndex !== -1 ? cropQueue[currentQueueIndex] : null;
-
   return (
-    <SectionPanel icon={<FiImage className="w-4 h-4" />} title="گالری تصاویر محصول" accent="sky">
+    <SectionPanel icon={<FiImage className="w-4 h-4" />} title="مدیریت تصاویر محصول" accent="sky">
+      
+      {/* هدر انتخاب دستی نسبت ابعاد پیش از آپلود */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 mb-3">
+        <div>
+          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">ابعاد کادر عکس برای بارگذاری:</h4>
+          <p className="text-[10px] text-slate-400 mt-1">پیش از انتخاب عکس، نوع تصویر را انتخاب کنید تا به طور هوشمند برش بخورد.</p>
+        </div>
+        
+        <div className="flex p-1 bg-slate-200/60 dark:bg-slate-800 rounded-xl max-w-xs gap-1">
+          <button
+            type="button"
+            disabled={isProcessing}
+            onClick={() => setActiveUploadRatio(1)}
+            className={`
+              flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-extrabold transition
+              ${activeUploadRatio === 1 
+                ? "bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm" 
+                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }
+            `}
+          >
+            <FiSquare className="w-3.5 h-3.5" /> تصویر محصول (۱:۱)
+          </button>
+          <button
+            type="button"
+            disabled={isProcessing}
+            onClick={() => setActiveUploadRatio(16 / 9)}
+            className={`
+              flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-extrabold transition
+              ${activeUploadRatio === 16 / 9 
+                ? "bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm" 
+                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }
+            `}
+          >
+            <FiSliders className="w-3.5 h-3.5" /> بنر عریض (۱۶:۹)
+          </button>
+        </div>
+      </div>
+
+      {/* بخش انتخاب فایل با لودینگ */}
       <label className="flex flex-col items-center gap-2 p-5 border-2 border-dashed rounded-xl border-slate-200 dark:border-[#1f2235]/50 cursor-pointer hover:border-sky-400 hover:bg-sky-50/40 transition">
-        <FiUpload className="w-5 h-5 text-slate-400" />
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">انتخاب و بهینه‌سازی گروهی تصاویر گالری</span>
-        <input type="file" multiple accept="image/*" className="hidden" onChange={handleUpload} />
+        {isProcessing ? (
+          <FiLoader className="w-5 h-5 text-sky-500 animate-spin" />
+        ) : (
+          <FiUpload className="w-5 h-5 text-slate-400" />
+        )}
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+          {isProcessing ? "در حال آنالیز و برش هوشمند تصویر در کلاینت..." : "انتخاب و بارگذاری مستقیم تصویر"}
+        </span>
+        <input type="file" multiple accept="image/*" disabled={isProcessing} className="hidden" onChange={handleUpload} />
       </label>
 
+      {/* گالری نمایش تصاویر ذخیره‌شده */}
       {images.length === 0 ? (
         <EmptyState label="هنوز تصویری اضافه نشده است" />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {images.map((img, idx) => (
-            <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-[#1f2235]/50 aspect-square">
+            <div 
+              key={idx} 
+              className={`
+                relative group rounded-xl overflow-hidden border border-slate-200 dark:border-[#1f2235]/50
+                ${img.ratio === 1 ? "aspect-square" : "aspect-video col-span-2"}
+              `}
+            >
               <Image src={img.url} alt="product" fill className="object-cover" />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleSetMain(idx)}
-                  aria-label="تنظیم به عنوان تصویر اصلی"
                   className={`p-1.5 rounded-lg text-white transition ${img.isMain ? "bg-emerald-500" : "bg-slate-700 hover:bg-slate-600"}`}
                 >
                   <FiStar className="w-3.5 h-3.5" />
@@ -136,7 +158,6 @@ export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesM
                 <button
                   type="button"
                   onClick={() => handleRemove(idx)}
-                  aria-label="حذف تصویر"
                   className="p-1.5 rounded-lg bg-rose-500 hover:bg-rose-600 text-white transition"
                 >
                   <FiTrash2 className="w-3.5 h-3.5" />
@@ -149,21 +170,6 @@ export const ImagesManager = React.memo(function ImagesManager({ name }: ImagesM
           ))}
         </div>
       )}
-
-      {/* سیستم هوشمند صف‌بندی برش گالری کالاها (به صورت مربع ۱:۱ استاندارد محصولات) */}
-      <AnimatePresence>
-        {activeCropItem && (
-          <ImageCropperModal
-            key={currentQueueIndex}
-            imageSrc={activeCropItem.previewUrl}
-            aspectRatio={1 / 1} // ابعاد مربع ۱:۱ برای گالری محصولات
-            targetWidth={800} // سایز بهینه ۸۰۰ پیکسلی
-            title={`برش و فشرده‌سازی تصویر گالری (${toPersianNumber(currentQueueIndex + 1)} از ${toPersianNumber(cropQueue.length)})`}
-            onCrop={handleCroppedItem}
-            onCancel={handleCancelCrop}
-          />
-        )}
-      </AnimatePresence>
     </SectionPanel>
   );
 });

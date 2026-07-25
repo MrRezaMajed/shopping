@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CRUDListProps } from "./types";
 import { CRUDListHeader } from "./CRUDListHeader";
@@ -35,6 +35,19 @@ function CRUDListInner<T extends { id: number }>({
   const endRange = Math.min(page * limit, total);
 
   const isAllSelected = data.length > 0 && data.every((item) => selectedIds?.includes(item.id));
+
+  // استیت کنترل بازه زمانی چرخش پرتو مینی‌مال
+  const [runSweep, setRunSweep] = useState(false);
+
+  useEffect(() => {
+    if (loading) {
+      setRunSweep(true);
+    } else {
+      // نگه‌داشتن کادر نورانی برای ۲ ثانیه بعد از دریافت موفقیت‌آمیز داده‌ها
+      const timer = setTimeout(() => setRunSweep(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
   
   const handleSelectAll = (checked: boolean) => {
     if (!onSelectedIdsChange) return;
@@ -62,16 +75,24 @@ function CRUDListInner<T extends { id: number }>({
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
         <div className="relative rounded-[24px] p-[1.5px] bg-gray-200/30 dark:bg-gray-dark/50 transition-colors duration-300">
           
-          <div
-            className="absolute inset-0 pointer-events-none rounded-[inherit] border-[2px] border-transparent animate-border-beam z-0 motion-reduce:hidden"
-            style={{
-              background: "conic-gradient(from var(--border-angle), transparent 60%, var(--brand-300) 75%, var(--brand-500) 90%, var(--brand-300) 100%) border-box",
-              WebkitMask: "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
-              WebkitMaskComposite: "xor",
-              maskComposite: "exclude",
-              filter: "drop-shadow(0 0 10px var(--brand-500)) opacity(0.7)",
-            }}
-          />
+          {/* پرتو مینی‌مال که فقط زمان لود/بروزرسانی داده‌ها ۱ الی ۲ دور می‌چرخد و خاموش می‌شود */}
+          <AnimatePresence>
+            {runSweep && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 pointer-events-none rounded-[inherit] border-[2px] border-transparent animate-border-beam z-0 motion-reduce:hidden"
+                style={{
+                  background: "conic-gradient(from var(--border-angle), transparent 75%, var(--brand-500) 90%, transparent 100%) border-box",
+                  WebkitMask: "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
+                  WebkitMaskComposite: "xor",
+                  maskComposite: "exclude",
+                  filter: "drop-shadow(0 0 8px var(--brand-500)) opacity(0.8)",
+                }}
+              />
+            )}
+          </AnimatePresence>
 
           <div
             className="

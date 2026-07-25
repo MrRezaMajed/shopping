@@ -6,7 +6,6 @@ import { Formik, Form, FormikHelpers } from "formik";
 import { FiArrowRight, FiCheck, FiX } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-// import CategoryTreeSelector from "@/components/CategoryTreeSelector";
 import CategoryTreeSelector from "@/components/ui/CategoryTreeSelector/CategoryTreeSelector";
 import { formatPersianNumber, parsePersianNumber } from "@/lib/utils/persianNumbers";
 import { CRUDEditFormProps } from "./types";
@@ -111,7 +110,8 @@ export default function CRUDEditForm<T extends Record<string, any>>({
   );
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    // تصحیح تگ ریشه: تغییر کلاس min-h-screen به relative w-full
+    <div className="relative w-full">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none -z-10" />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -158,6 +158,8 @@ export default function CRUDEditForm<T extends Record<string, any>>({
                           name={String(field.name)}
                           setFieldValue={setFieldValue}
                           existingUrl={typeof normalizedInitialValues[field.name] === "string" ? (normalizedInitialValues[field.name] as string) : null}
+                          aspectRatio={(field as any).aspectRatio}
+                          targetWidth={(field as any).targetWidth}
                         />
                         <ErrorMessage name={String(field.name)} />
                       </div>

@@ -1,24 +1,30 @@
+// components/ui/CRUDEditForm/FileInput.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { FiUpload, FiRefreshCw, FiX } from "react-icons/fi";
-import { AnimatePresence } from "framer-motion";
-import ImageCropperModal from "../ImageCropper/ImageCropperModal";
+import { FiUpload, FiRefreshCw, FiX, FiLoader } from "react-icons/fi";
+import { autoSmartCrop } from "@/lib/utils/smartcrop";
 
 interface FileInputProps {
   name: string;
   setFieldValue: (name: string, value: File | string | null) => void;
   existingUrl?: string | null;
+  aspectRatio?: number; // نسبت ابعاد پویا (مثلا ۱۶:۹ برای بنر یا ۱:۱ برای لوگو)
+  targetWidth?: number; // عرض بهینه داینامیک
 }
 
-export const FileInput = React.memo(function FileInput({ name, setFieldValue, existingUrl }: FileInputProps) {
+export const FileInput = React.memo(function FileInput({
+  name,
+  setFieldValue,
+  existingUrl,
+  aspectRatio = 16 / 9, // پیش‌فرض بنرها عریض است
+  targetWidth = 1280,   // پیش‌فرض کیفیت اچ‌دی
+}: FileInputProps) {
   const [previewUrl, setPreviewUrl] = useState<string>(existingUrl || "");
   const [error, setError] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
-
-  // متغیرهای وضعیت برش تصویر بنر (تک تصویر با نسبت ابعاد ۱۶:۹)
-  const [rawImageSrc, setRawModelSrc] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -27,34 +33,35 @@ export const FileInput = React.memo(function FileInput({ name, setFieldValue, ex
   }, [previewUrl]);
 
   const processFile = useCallback(
-    (file: File | null) => {
+    async (file: File | null) => {
       if (!file) {
         setFieldValue(name, null);
         setPreviewUrl("");
         return;
       }
 
-      // تولید موقت آبجکت URL کلاینت برای لود در کراپ مانیتور
-      const tempUrl = URL.createObjectURL(file);
-      setRawModelSrc(tempUrl);
-    },
-    [name, setFieldValue]
-  );
+      setIsProcessing(true);
+      try {
+        const tWidth = targetWidth;
+        const tHeight = Math.round(targetWidth / aspectRatio);
 
-  const handleCroppedImage = (croppedFile: File) => {
-    setFieldValue(name, croppedFile);
-    setPreviewUrl((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(croppedFile);
-    });
-    
-    // پاک کردن منابع موقتی آدرس‌ها
-    if (rawImageSrc) {
-      URL.revokeObjectURL(rawImageSrc);
-      setRawModelSrc(null);
-    }
-    setError(false);
-  };
+        // ۱. برش و فشرده‌سازی کاملا هوشمند در پس‌زمینه کلاینت
+        const croppedFile = await autoSmartCrop(file, tWidth, tHeight);
+
+        setFieldValue(name, croppedFile);
+        setPreviewUrl((prev) => {
+          if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+          return URL.createObjectURL(croppedFile);
+        });
+        setError(false);
+      } catch (err) {
+        console.error("خطا در برش هوشمند فایل کلاینت:", err);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [name, setFieldValue, aspectRatio, targetWidth]
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     processFile(e.currentTarget.files?.[0] || null);
@@ -101,19 +108,33 @@ export const FileInput = React.memo(function FileInput({ name, setFieldValue, ex
             : "border-slate-200 dark:border-[#1f2235]/60 bg-slate-50/30 dark:bg-[#121420]/20 hover:border-indigo-300 dark:hover:border-indigo-500/40"
         }`}
       >
-        <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+        <input type="file" accept="image/*" disabled={isProcessing} onChange={handleFileChange} className="hidden" />
         <div
           className={`p-4 rounded-xl transition-all duration-300 ${
-            isDragActive ? "bg-indigo-500 text-white scale-110" : "bg-slate-100 dark:bg-[#1b1e30] text-slate-400 group-hover:scale-105 group-hover:text-indigo-500"
+            isDragActive 
+              ? "bg-indigo-500 text-white scale-110" 
+              : isProcessing 
+                ? "bg-sky-500/10 text-sky-500"
+                : "bg-slate-100 dark:bg-[#1b1e30] text-slate-400 group-hover:scale-105 group-hover:text-indigo-500"
           }`}
         >
-          <FiUpload className="w-5 h-5" />
+          {isProcessing ? (
+            <FiLoader className="w-5 h-5 animate-spin" />
+          ) : (
+            <FiUpload className="w-5 h-5" />
+          )}
         </div>
         <div className="text-center space-y-1 z-10 select-none">
           <p className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
-            {isDragActive ? "فایل را اینجا رها کنید" : "کلیک کنید یا تصویر خود را به اینجا بکشید"}
+            {isProcessing 
+              ? "در حال پردازش هوشمند تصویر..." 
+              : isDragActive 
+                ? "فایل را اینجا رها کنید" 
+                : "کلیک کنید یا تصویر خود را به اینجا بکشید"}
           </p>
-          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">PNG, JPG, WEBP مجهز به برش خودکار ۱۶:۹</p>
+          <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">
+            PNG, JPG, WEBP مجهز به فشرده‌سازی و برش خودکار هوشمند
+          </p>
         </div>
       </label>
 
@@ -152,23 +173,6 @@ export const FileInput = React.memo(function FileInput({ name, setFieldValue, ex
           </button>
         </div>
       )}
-
-      {/* مودال برش بنرها (به صورت ۱۶:۹ برای بنرها و هدرها) */}
-      <AnimatePresence>
-        {rawImageSrc && (
-          <ImageCropperModal
-            imageSrc={rawImageSrc}
-            aspectRatio={16 / 9} // هماهنگ با نسبت ابعاد بنرها
-            title="برش و فشرده‌سازی بنر کلاینت"
-            targetWidth={1280} // کیفیت اچ دی خروجی
-            onCrop={handleCroppedImage}
-            onCancel={() => {
-              URL.revokeObjectURL(rawImageSrc);
-              setRawModelSrc(null);
-            }}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 });

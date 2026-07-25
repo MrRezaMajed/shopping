@@ -79,7 +79,14 @@ export const bannerConfig = {
         { value: "INACTIVE", label: "غیرفعال" },
       ],
     },
-    { name: "image", label: "تصویر", type: "file" },
+    // فیلد آپلود مجهز به پیکربندی ابعاد بنر عریض به صورت کاملاً خودکار
+    { 
+      name: "image", 
+      label: "تصویر", 
+      type: "file",
+      aspectRatio: 16 / 9,
+      targetWidth: 1280
+    },
   ],
   filterFields: [
     { key: "search", type: "search", placeholder: "جستجوی بنر..." },

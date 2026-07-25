@@ -8,12 +8,13 @@ import CRUDPage from "@/components/ui/CRUDPage/CRUDPage";
 import { useDynamicOptions } from "./hooks/useDynamicOptions";
 import { modelRegistry } from "./confing/registry";
 
+// اصلاح لودینگ برای ممانعت از ایجاد اسکرول اضافی در صفحه
 const CategoryLoading = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="w-full flex-grow flex items-center justify-center min-h-[300px] py-20">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
+        <p className="text-sm font-semibold text-slate-500 dark:text-zinc-400 animate-pulse">
           در حال بارگذاری ساختار داده...
         </p>
       </div>
@@ -33,8 +34,8 @@ const normalizeModelParam = (param: string): string => {
     banners: "banners",
     post: "posts",
     posts: "posts",
-    user: "users",   // 👈 نرمال‌سازی یوزر مفرَد
-    users: "users"   // 👈 نرمال‌سازی یوزر جمع
+    user: "users",   // نرمال‌سازی یوزر مفرَد
+    users: "users"   // نرمال‌سازی یوزر جمع
   };
   return map[param.toLowerCase()] || param;
 };
@@ -82,7 +83,7 @@ export default function GenericModelPage() {
       hiddenOnMobile={config.hiddenOnMobile}
       filterTranslations={config.filterTranslations}
       
-      // 👈 ارسال ویژگی‌های عدم نمایش دکمه‌ها
+      // ارسال ویژگی‌های عدم نمایش دکمه‌ها
       disableCreate={config.disableCreate}
       disableEdit={config.disableEdit}
     />

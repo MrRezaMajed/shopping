@@ -1,9 +1,9 @@
+// app/layout.tsx
 import "../globals.css";
 import Providers from "./providers";
 import { ReactNode } from "react";
 import { Metadata } from "next";
 import { SidebarProvider } from "@/context/SidebarContext";
-// ThemeProvider حذف شد چون در لایوت ریشه تعریف شده است
 
 export const metadata: Metadata = {
   title: "فروشگاه آنلاین آمازون / داشبورد",
@@ -16,12 +16,14 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <SidebarProvider>
-      <Providers>
-        <div className="flex flex-col min-h-screen">
-          {children}
-        </div>
-      </Providers>
-    </SidebarProvider>
+    <html lang="fa" dir="rtl">
+      <body>
+        <SidebarProvider>
+          <Providers>
+            {children}
+          </Providers>
+        </SidebarProvider>
+      </body>
+    </html>
   );
 }

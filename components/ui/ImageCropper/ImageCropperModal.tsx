@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom"; // اضافه شدن پورتال برای انتقال به روت بدنه
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { FiZoomIn, FiCheck, FiX } from "react-icons/fi";
 import { toPersianNumber } from "@/lib/utils/persianNumbers";
 
 interface ImageCropperModalProps {
   imageSrc: string;
-  aspectRatio: number; // مثلاً 1 برای ۱:۱ و 16/9 برای ۱۶:۹
-  targetWidth?: number; // عرض خروجی تصویر نهایی (مثلاً 800 پیکسل)
+  aspectRatio: number; // پویایی نسبت تصویر بر اساس انتخاب کاربر
+  targetWidth?: number; // عرض خروجی تصویر نهایی
   title?: string;
   onCrop: (croppedFile: File) => void;
   onCancel: () => void;
@@ -26,39 +26,32 @@ export default function ImageCropperModal({
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [mounted, setMounted] = useState(false); // کنترل وضعیت رندر در کلاینت (Next.js)
+  const [mounted, setMounted] = useState(false);
   
   const dragStart = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const maskRef = useRef<HTMLDivElement>(null);
 
-  // ۱. مدیریت مونت شدن و قفل کردن اسکرول صفحه اصلی
   useEffect(() => {
     setMounted(true);
-    
-    // غیرفعال کردن اسکرول صفحه زیرین زمان باز شدن مودال
     document.body.style.overflow = "hidden";
     
     return () => {
-      // بازگرداندن اسکرول به حالت عادی پس از بستن مودال
       document.body.style.overflow = "unset";
     };
   }, []);
 
-  // ریست کردن پوزیشن و زوم در زمان باز شدن تصویر جدید
   useEffect(() => {
     setZoom(1);
     setPosition({ x: 0, y: 0 });
   }, [imageSrc]);
 
-  // هندل کردن آغاز درگ با موس
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
   };
 
-  // هندل کردن جابه‌جایی با موس
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
     setPosition({
@@ -67,14 +60,12 @@ export default function ImageCropperModal({
     });
   };
 
-  // هندل کردن آغاز درگ با لمس (موبایل و تبلت)
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     setIsDragging(true);
     dragStart.current = { x: touch.clientX - position.x, y: touch.clientY - position.y };
   };
 
-  // هندل کردن جابه‌جایی با لمس (موبایل و تبلت)
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return;
     const touch = e.touches[0];
@@ -88,7 +79,6 @@ export default function ImageCropperModal({
     setIsDragging(false);
   };
 
-  // فرآیند محاسبات ریاضی برش کانواس و بهینه‌سازی حجم تصویر
   const handleConfirmCrop = () => {
     if (!imageRef.current || !maskRef.current) return;
 
@@ -144,22 +134,27 @@ export default function ImageCropperModal({
     );
   };
 
+  // افزایش محدوده ابعاد ماسک برای پر کردن حداکثری فضای کانتینر در ابعاد ۱۶:۹
+  const maxMaskWidth = 370;
+  const maxMaskHeight = 270;
+
+  let maskWidth = maxMaskWidth;
+  let maskHeight = maxMaskWidth / aspectRatio;
+
+  if (maskHeight > maxMaskHeight) {
+    maskHeight = maxMaskHeight;
+    maskWidth = maxMaskHeight * aspectRatio;
+  }
+
   const maskStyle: React.CSSProperties = {
-    width: aspectRatio === 1 ? "260px" : "340px",
-    height: aspectRatio === 1 ? "260px" : "191px",
+    width: `${maskWidth}px`,
+    height: `${maskHeight}px`,
   };
 
-  // ممانعت از رندر شدن در سمت سرور تا زمان مونت شدن کامل در کلاینت
   if (!mounted) return null;
 
-  // رندر کردن کامپوننت با استفاده از Portal در بدنه اصلی سند (document.body)
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-      {/* 
-        بک‌دراپ مودال:
-        رنگ تیره ملایم (bg-black/25) و بدون تار کردن زیاد پس‌زمینه اعمال شده تا اجزای زیرین به خوبی دیده شوند.
-        وجود این لایه کلیکی به کاربر اجازه تعامل با پشت مودال را نمی‌دهد.
-      */}
       <div 
         className="absolute inset-0 bg-black/25 backdrop-blur-[2px] cursor-not-allowed" 
         onClick={onCancel} 
@@ -184,7 +179,6 @@ export default function ImageCropperModal({
           </button>
         </div>
 
-        {/* کادر نگه‌دارنده جابه‌جایی و درگ تصویر */}
         <div
           ref={containerRef}
           onMouseDown={handleMouseDown}
@@ -221,7 +215,6 @@ export default function ImageCropperModal({
           />
         </div>
 
-        {/* اسلایدر کنترل زوم */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 font-bold">
             <span className="flex items-center gap-1"><FiZoomIn /> بزرگ‌نمایی</span>
@@ -262,6 +255,6 @@ export default function ImageCropperModal({
         </div>
       </motion.div>
     </div>,
-    document.body // پورت کردن به تگ بادی سیستم
+    document.body
   );
 }

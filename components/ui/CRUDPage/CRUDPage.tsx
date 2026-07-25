@@ -52,7 +52,7 @@ const getPluralModelParam = (model: string): string => {
     brand: "brands",
     banner: "banners",
     post: "posts",
-    user: "users" // 👈 اضافه شدن به جهت روت ترانسفر
+    user: "users"
   };
   return map[model] || model;
 };
@@ -66,8 +66,8 @@ export default function CRUDPage({
   hiddenOnMobile = [],
   dynamicOptions = {},
   filterTranslations,
-  disableCreate = false, // 👈 مقدار پیش‌فرض دریافت پروپ
-  disableEdit = false,   // 👈 مقدار پیش‌فرض دریافت پروپ
+  disableCreate = false,
+  disableEdit = false,
 }: Omit<CRUDPageProps, "formFields" | "validationSchema">) {
   
   const router = useRouter();
@@ -143,12 +143,12 @@ export default function CRUDPage({
   }, [setShowTrash, setPage]);
 
   const handleCreate = useCallback(() => {
-    if (disableCreate) return; // لغو دستی در صورت فراخوانی غیرمنتظره
+    if (disableCreate) return;
     router.push(`/panel/${pluralModel}/create`);
   }, [router, pluralModel, disableCreate]);
 
   const handleEdit = useCallback((item: any) => {
-    if (disableEdit) return; // لغو دستی در صورت فراخوانی غیرمنتظره
+    if (disableEdit) return;
     router.push(`/panel/${pluralModel}/edit/${item.id}`);
   }, [router, pluralModel, disableEdit]);
 
@@ -299,7 +299,6 @@ export default function CRUDPage({
   const commandItems = useMemo(() => {
     const items = [];
 
-    // 👈 اضافه شدن دکمه ایجاد به منوی کیبورد فقط در صورت فعال بودن
     if (!disableCreate) {
       items.push({
         id: "create",
@@ -395,7 +394,6 @@ export default function CRUDPage({
         return;
       }
 
-      // 👈 بررسی فعال بودن قابلیت ایجاد قبل از میانبر کیبورد
       if (key === "c" && !showTrash && !disableCreate) {
         e.preventDefault();
         handleCreate();
@@ -426,7 +424,8 @@ export default function CRUDPage({
   const brandsCount = dynamicOptions?.brandId?.length ? dynamicOptions.brandId.length - 1 : 0;
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    // تصحیح تگ ریشه: تغییر کلاس min-h-screen به relative w-full
+    <div className="relative w-full">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none -z-10" />
 
       <div 
@@ -455,7 +454,6 @@ export default function CRUDPage({
               onRefresh={refreshList}
             >
               <TrashButton showTrash={showTrash} onClick={handleTrashToggle} />
-              {/* 👈 اعمال شرط عدم نمایش دکمه ایجاد جدید */}
               {!showTrash && !disableCreate && <CreateButton onClick={handleCreate} label={`ایجاد ${modelName} جدید`} />}
             </CRUDPageHeader>
 
@@ -558,7 +556,6 @@ export default function CRUDPage({
               loading={loading}
               onPageChange={setPage}
               onLimitChange={setLimit}
-              // 👈 غیرفعال کردن دکمه ویرایش در لیست در صورت ارسال فلگ disableEdit
               onEdit={!showTrash && !disableEdit ? handleEdit : undefined}
               onDelete={(item) => showDeleteConfirm(item, false)}
               onRestore={showTrash ? handleRestore : undefined}
@@ -576,7 +573,6 @@ export default function CRUDPage({
           </motion.div>
         </AnimatePresence>
 
-        {/* 👈 فرستادن فلگ عدم ایجاد به کامپوننت راهنمای کیبورد */}
         <KeyboardHelpLegend disableCreate={disableCreate} />
 
         <AnimatePresence>

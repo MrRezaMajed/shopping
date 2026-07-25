@@ -4,7 +4,7 @@ import React, { useCallback } from "react";
 import { useFormikContext } from "formik";
 import { FiLayers, FiTrash2, FiEdit3, FiTag, FiBox, FiShield, FiPlus } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import { toPersianNumber } from "@/lib/utils/persianNumbers";
+import { toEnglishNumber, toPersianNumber } from "@/lib/utils/persianNumbers";
 import { SectionPanel } from "./SectionPanel";
 import { EmptyState } from "./EmptyState";
 import { INPUT_IDLE } from "./constants";
@@ -132,11 +132,22 @@ export const VariantsManager = React.memo(function VariantsManager({ name }: Var
                   <div>
                     <label className="text-[10px] text-slate-400 block mb-1">مدت زمان (ماه)</label>
                     <input
-                      type="number"
-                      min={0}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9۰-۹]*"
                       placeholder="۱۲"
-                      value={item.warranty?.periodMonths ?? 12}
-                      onChange={(e) => handleChange(idx, "warranty.periodMonths", parseInt(e.target.value, 10) || 0)}
+                      // تبدیل مقدار عددی به رشته با اعداد فارسی برای نمایش
+                      value={toPersianNumber(item.warranty?.periodMonths ?? 12)}
+                      onChange={(e) => {
+                        // ۱. تبدیل هرگونه عدد فارسی/عربی ورودی به انگلیسی
+                        const englishStr = toEnglishNumber(e.target.value);
+                        // ۲. حذف کاراکترهای غیرعددی احتمالی
+                        const cleanedStr = englishStr.replace(/[^0-9]/g, '');
+                        // ۳. تبدیل به عدد صحیح
+                        const parsedValue = parseInt(cleanedStr, 10) || 0;
+                        
+                        handleChange(idx, "warranty.periodMonths", parsedValue);
+                      }}
                       className={`w-full p-2.5 text-xs font-semibold border rounded-lg ${INPUT_IDLE}`}
                     />
                   </div>

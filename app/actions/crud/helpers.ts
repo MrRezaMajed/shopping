@@ -1,3 +1,5 @@
+// @/app/actions/crud/helpers.ts
+
 // شامل پردازش‌های عمومی مانند کار با فایل سیستم، نرمال‌سازی قیمت‌ها/اعداد و پاکسازی آبجکت‌ها است
 
 import fs from "fs";
@@ -62,6 +64,15 @@ export async function sanitizeData(model: ModelKey, data: CRUDItemInput) {
         sanitized[key] = null;
       } else {
         sanitized[key] = Number(value);
+      }
+      continue;
+    }
+
+    if (key === "publishedAt") {
+      if (value === "" || value === "null" || value === null || value === undefined) {
+        sanitized[key] = null;
+      } else {
+        sanitized[key] = new Date(value);
       }
       continue;
     }
@@ -161,6 +172,46 @@ export function getRelationIncludes(model: ModelKey, isDeleted: boolean) {
       },
     };
   }
+
+  if (model === "post") {
+    return {
+      author: {
+         select: { id: true, name: true }
+      },
+      category: {
+        select: { id: true, name: true },
+      },
+    };
+  }
+
+  // 👈 بارگذاری نظرات به صورت درختی به همراه ادمین پاسخ‌دهنده و رابطه تودرتو:
+  if (model === "postComment") {
+    return {
+      user: {
+        select: { id: true, name: true, email: true }
+      },
+      post: {
+        select: { id: true, title: true }
+      },
+      replies: {
+        where: { softDeletedAt: filter },
+        orderBy: { createdAt: "asc" as const },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true }
+          }
+        }
+      }
+    };
+  }
+
+  if (model === "productFAQ") {
+      return {
+        product: {
+          select: { id: true, title: true }
+        }
+      };
+    }
 
   return undefined;
 }

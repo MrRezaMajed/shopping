@@ -4,7 +4,7 @@ import { FaInbox } from "react-icons/fa";
 
 export const EmptyState = React.memo(function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 sm:py-28 text-center">
+    <div className="flex flex-col items-center justify-center py-10 sm:py-18 text-center">
       <div className="relative mb-5">
         <div className="absolute inset-0 bg-indigo-500/5 dark:bg-indigo-500/2 blur-2xl rounded-full" />
         <motion.div

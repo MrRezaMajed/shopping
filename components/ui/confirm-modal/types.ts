@@ -7,7 +7,7 @@ export interface ConfirmOptions {
   message?: string;
   confirmText?: string;
   cancelText?: string;
-  type?: 'warning' | 'error' | 'info';
+  type?: 'warning' | 'error' | 'danger' | 'info' | 'success';
 }
 
 export interface ConfirmModalProps {
@@ -16,9 +16,14 @@ export interface ConfirmModalProps {
 }
 
 export interface ModalTheme {
-  bg: string;
-  text: string;
-  border: string;
-  btn: string;
-  icon: ReactNode;
+  type: 'warning' | 'error' | 'danger' | 'info' | 'success';
+  cardBg: string;       // پس‌زمینه اصلی کارت
+  bg: string;           // پس‌زمینه کانتینر آیکون
+  text: string;         // رنگ متن آیکون
+  border: string;       // حاشیه دور آیکون
+  titleText: string;    // رنگ تایتل هدر
+  messageText: string;  // رنگ توضیحات هدر
+  btn: string;          // استایل دکمه تایید
+  cancelBtn: string;    // استایل دکمه انصراف
+  icon: ReactNode;      // آیکون مربوط به تم
 }

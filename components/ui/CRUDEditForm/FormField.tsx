@@ -1,6 +1,4 @@
-// FormField.tsx
-
-// کنترلر اصلی سوئیچ و رندر نهایی فیلدها
+// @/components/ui/CRUDEditForm/FormField.tsx
 
 import React, { useCallback, useRef, useEffect } from "react";
 import { useField, useFormikContext } from "formik";
@@ -11,6 +9,8 @@ import { formatNumericInput } from "./utils";
 import { ImagesManager } from "./ImagesManager";
 import { AttributesManager } from "./AttributesManager";
 import { VariantsManager } from "./VariantsManager";
+import { JoditField } from "./JoditField"; // 👈 استفاده از ویرایشگر جدید Jodit
+import { TagsField } from "./TagsField";
 
 interface FormFieldProps {
   field: FieldConfig<any>;
@@ -18,7 +18,6 @@ interface FormFieldProps {
   disabled?: boolean;
 }
 
-// تابع کمکی برای رندر ایمن خطاها (جلوگیری از کرش ری‌اکت در فیلدهای آرایه‌ای و آبجکتی)
 const renderError = (error: any): React.ReactNode => {
   if (!error) return null;
   if (typeof error === "string") return error;
@@ -195,6 +194,35 @@ export const FormField = React.memo(function FormField({
       return (
         <div className="space-y-2">
           <VariantsManager name={String(field.name)} />
+          {errorNode}
+        </div>
+      );
+
+    case "tags":
+      return (
+        <div className="space-y-2">
+          <label htmlFor={fieldId} className={LABEL_CLASS}>{field.label}</label>
+          <TagsField
+            name={fieldId}
+            value={formikField.value || []}
+            onChange={(val) => setFieldValue(fieldId, val)}
+            placeholder={`ورود ${field.label}...`}
+          />
+          {errorNode}
+        </div>
+      );
+
+    case "editor":
+    case "tiptap":
+    case "jodit": // 👈 پشتیبانی یکجا از هر سه تایپ به نفع رندر Jodit
+      return (
+        <div className="space-y-2">
+          <label htmlFor={fieldId} className={LABEL_CLASS}>{field.label}</label>
+          <JoditField
+            value={formikField.value || ""}
+            onChange={(val) => setFieldValue(fieldId, val)}
+            placeholder={`ورود ${field.label}...`}
+          />
           {errorNode}
         </div>
       );

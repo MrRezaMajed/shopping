@@ -46,9 +46,12 @@ const navItems: NavItem[] = [
     name: "محتوا", 
     subItems: [
       { name: "بنرها", path: "/panel/banners" },
-      { name: "دسته‌بندی‌ها", path: "/panel/categories" },
+      { name: "دسته‌بندی‌ها", path: "/panel/post-categories" },
       { name: "برندها", path: "/panel/brands" },
-      { name: "محصولات", path: "/panel/products" }
+      { name: "محصولات", path: "/panel/products" },
+      { name: "پست‌ها", path: "/panel/posts" },
+      { name: "نظرات", path: "/panel/post-comments" },
+      { name: "سوالات متداول", path: "/panel/product-faqs" },
     ] 
   },
   { 

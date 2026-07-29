@@ -1,4 +1,4 @@
-// وظیفه دریافت لیست‌ها، ساختاربندی داده‌های محصول و ارائه آمارهای مربوط به کالاها را برعهده دارد
+// @/app/actions/crud/read.ts
 
 "use server";
 import { prisma } from "@/lib/prisma";
@@ -25,13 +25,43 @@ export async function getItems(
       where.softDeletedAt = null;
     }
 
+    // 👈 فیلتر ردیف‌های فرعی نظرات وبلاگ؛ فقط پیام‌های اصلی بدون parentId لود می‌شوند
+    if (model === "postComment") {
+      where.parentId = null; 
+    }
+
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value === undefined || value === "" || value === null || key === "deleted") return;
         
         if (key === "search") {
-          const searchField = searchFields[model] || "title" || "slug" || "name";
-          where[searchField] = { contains: value };
+          // پیاده‌سازی جستجوی متنی ترکیبی بر اساس نوع مدل
+          if (model === "post") {
+            where.OR = [
+              { title: { contains: value } },
+              { category: { name: { contains: value } } }
+            ];
+          } 
+          // 👈 جستجوی ترکیبی هوشمند برای نظرات وبلاگ
+          else if (model === "postComment") {
+            where.OR = [
+              { text: { contains: value } },
+              { post: { title: { contains: value } } },
+              { user: { name: { contains: value } } }
+            ];
+          } 
+          // 👈 جستجوی ترکیبی پیشرفته برای سوالات متداول کالا (ProductFAQ)
+          else if (model === "productFAQ") {
+            where.OR = [
+              { question: { contains: value } },
+              { answer: { contains: value } },
+              { product: { title: { contains: value } } }
+            ];
+          }
+          else {
+            const searchField = searchFields[model] || "title" || "slug" || "name";
+            where[searchField] = { contains: value };
+          }
         } 
         else if (key === "id" || key.endsWith("Id")) {
           where[key] = value === "null" ? null : Number(value);
@@ -151,5 +181,33 @@ export async function getProductStats() {
   } catch (err: any) {
     console.error("getProductStats error:", err);
     return { success: false, total: 0, outOfStock: 0, lowStock: 0 };
+  }
+}
+
+export async function getPostCategories() {
+  try {
+    const categories = await prisma.postCategory.findMany({
+      where: { softDeletedAt: null },
+      select: { id: true, name: true, parentId: true },
+      orderBy: { name: "asc" },
+    });
+    return categories;
+  } catch (err: any) {
+    console.error("getPostCategories error:", err);
+    return [];
+  }
+}
+
+export async function getProducts() {
+  try {
+    const products = await prisma.product.findMany({
+      where: { softDeletedAt: null },
+      select: { id: true, title: true },
+      orderBy: { title: "asc" },
+    });
+    return products;
+  } catch (err: any) {
+    console.error("getProducts error:", err);
+    return [];
   }
 }

@@ -9,6 +9,8 @@ import { sanitizeData, cleanAndParseNumber, handleFileUpload, serializeDecimal }
 import { getRelationIncludes } from "./helpers";
 import { logActivity } from "../audit/log";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 // هماهنگ‌کننده نام‌های جمع مدل‌ها برای ساخت آدرس‌ها و بازنویسی کش
 const pluralModelMap: Record<string, string> = {
@@ -18,6 +20,9 @@ const pluralModelMap: Record<string, string> = {
   banner: "banners",
   post: "posts",
   user: "users", // 👈 هماهنگ شدن آدرس ریدایرکت/کش کاربران
+  postCategory: "post-categories",
+  postComment: "post-comments",
+  productFAQ: "product-faqs",
 };
 
 /**
@@ -28,7 +33,20 @@ export async function createItem(model: ModelKey, data: CRUDItemInput) {
     const db = modelMap[model];
     if (!db) throw new Error(`Model "${model}" not found`);
 
-    const sanitizedData = await sanitizeData(model, data);
+    
+
+    if (model === "post") {
+      const session = await getServerSession(authOptions);
+      const userId = session?.user?.id;
+   
+      if (!userId) {
+        throw new Error("برای ثبت پست، ابتدا باید وارد حساب کاربری خود شوید.");
+      }
+   
+      data.authorId = Number(userId);
+    }
+   const sanitizedData = await sanitizeData(model, data);
+    
 
     if (model === "product") {
       const rawVariants = sanitizedData.variants || [];

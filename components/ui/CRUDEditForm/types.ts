@@ -12,7 +12,10 @@ export type FieldType =
   | "tree"
   | "images"
   | "attributes"
-  | "variants";
+  | "variants"
+  | "jodit"
+  | "jalali-date"
+  | "tags";
 
 export interface FieldConfig<T> {
   name: keyof T;

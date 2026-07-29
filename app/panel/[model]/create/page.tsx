@@ -26,7 +26,15 @@ const normalizeModelParam = (param: string): string => {
     banner: "banners",
     banners: "banners",
     post: "posts",
-    posts: "posts"
+    posts: "posts",
+    "post-category": "postCategories",
+    "post-categories": "postCategories",
+    postcategory: "postCategories",
+    postcategories: "postCategories",
+    "product-faq": "productFAQs",
+       "product-faqs": "productFAQs",
+       productfaq: "productFAQs",
+       productfaqs: "productFAQs",
   };
   return map[param.toLowerCase()] || param;
 };

@@ -48,6 +48,8 @@ enum CommentStatus {
   PENDING 
   APPROVED 
   REJECTED 
+  ACTIVE 
+  INACTIVE
 }
 
 enum Status { 
@@ -267,7 +269,7 @@ model ProductAttribute {
 
 model ProductFAQ {
   id           Int       @id @default(autoincrement())
-  productId    Int
+  productId    Int?
   question     String
   answer       String
   status       Status    @default(ACTIVE)
@@ -275,7 +277,7 @@ model ProductFAQ {
   updatedAt    DateTime  @updatedAt
   softDeletedAt DateTime?
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 ////////////////////////////////////
@@ -616,30 +618,59 @@ model Post {
   authorId     Int?
   title        String
   slug         String    @unique
+  summary      String?
   content      String
+  image         String?   // 👈 اضافه شد (برای ذخیره آدرس تصویر شاخص)
+  commentable   String?   // 👈 اضافه شد (برای وضعیت نظرات)
+  tags          Json?     // 👈 اضافه شد (نوع Json به SQLite اجازه می‌دهد آرایه تگ‌ها را بدون خطا ذخیره کند)
   status       Status    @default(ACTIVE)
-  publishedAt  DateTime?
+  publishedAt  DateTime? 
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   softDeletedAt DateTime?
-
+  
+  categoryId    Int?
+  category      PostCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  
   author User? @relation(fields: [authorId], references: [id])
   comments PostComment[]
   attachments Attachment[]
 }
 
+model PostCategory {
+  id          Int            @id @default(autoincrement())
+  name        String
+  slug        String         @unique
+  status      String         @default("ACTIVE") // وضعیت فعال/غیرفعال
+
+  // ارتباط خود‌ارجاعی برای دسته‌بندی‌های درختی (والد و فرزند)
+  parentId    Int?
+  parent      PostCategory?  @relation("CategoryToParent", fields: [parentId], references: [id], onDelete: Cascade)
+  children    PostCategory[] @relation("CategoryToParent")
+
+  // رابطه یک به چند با پست‌ها
+  posts       Post[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  softDeletedAt   DateTime?      // پشتیبانی از قابلیت سطل زباله (Soft Delete)
+}
+
 model PostComment {
-  id           Int           @id @default(autoincrement())
-  postId       Int
-  userId       Int?
-  text         String
-  status       CommentStatus @default(PENDING)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id            Int            @id @default(autoincrement())
+  postId        Int
+  userId        Int?           // شناسه کاربر (اگر لاگین کرده باشد، در غیر این صورت null برای مهمان)
+  parentId      Int?           // 👈 شناسه دیدگاه والد (برای پاسخ‌ها)
+  text          String
+  status        CommentStatus  @default(PENDING)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt // 👈 مجهز به مقدار پیش‌فرض دیتابیس
   softDeletedAt DateTime?
 
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user User? @relation(fields: [userId], references: [id])
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId], references: [id])
+  parent        PostComment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade) // 👈 رابطه والد
+  replies       PostComment[]  @relation("CommentReplies") // 👈 رابطه فرزندان (پاسخ‌ها)
 }
 
 model Banner {

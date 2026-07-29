@@ -35,7 +35,19 @@ const normalizeModelParam = (param: string): string => {
     post: "posts",
     posts: "posts",
     user: "users",   // نرمال‌سازی یوزر مفرَد
-    users: "users"   // نرمال‌سازی یوزر جمع
+    users: "users",   // نرمال‌سازی یوزر جمع
+    "post-category": "postCategories",
+    "post-categories": "postCategories",
+    postcategory: "postCategories",
+    postcategories: "postCategories",
+    "post-comment": "postComments",
+    "post-comments": "postComments",
+    postcomment: "postComments",
+    postcomments: "postComments",
+    "product-faq": "productFAQs",
+    "product-faqs": "productFAQs",
+    productfaq: "productFAQs",
+    productfaqs: "productFAQs",
   };
   return map[param.toLowerCase()] || param;
 };

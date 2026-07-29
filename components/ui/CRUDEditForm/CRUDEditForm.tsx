@@ -15,6 +15,11 @@ import { FormField } from "./FormField";
 import { ErrorMessage } from "./ErrorMessage";
 import { LABEL_CLASS } from "./constants";
 
+// ایمپورت ابزارهای تقویم شمسی
+import DatePicker from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
+
 const EMPTY_VARIANT = { color: "", price: "", stock: "", warranty: { title: "", periodMonths: 12, description: "" } };
 
 export default function CRUDEditForm<T extends Record<string, any>>({
@@ -35,6 +40,9 @@ export default function CRUDEditForm<T extends Record<string, any>>({
       if (existing !== undefined && existing !== null) {
         if (field.type === "number") {
           defaults[field.name as string] = formatPersianNumber(existing);
+        } else if (field.type === "jalali-date") {
+          // تبدیل تاریخ ذخیره شده به شیء تاریخ جاوااسکریپت برای دیت‌پیکر کلاینت
+          defaults[field.name as string] = new Date(existing);
         } else if (field.type === "variants" && Array.isArray(existing)) {
           defaults[field.name as string] = existing.map((v: any) => ({
             color: v.color || "",
@@ -74,6 +82,12 @@ export default function CRUDEditForm<T extends Record<string, any>>({
         case "images":
           defaults[field.name as string] = [];
           break;
+        case "tags":
+          defaults[field.name as string] = [];
+          break;
+        case "jalali-date": // مقدار اولیه تهی برای فیلد تاریخ خورشیدی
+          defaults[field.name as string] = null;
+          break;
         case "attributes":
           defaults[field.name as string] = [];
           break;
@@ -110,7 +124,6 @@ export default function CRUDEditForm<T extends Record<string, any>>({
   );
 
   return (
-    // تصحیح تگ ریشه: تغییر کلاس min-h-screen به relative w-full
     <div className="relative w-full">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808006_1px,transparent_1px),linear-gradient(to_bottom,#80808006_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none -z-10" />
 
@@ -146,7 +159,8 @@ export default function CRUDEditForm<T extends Record<string, any>>({
                   field.type === "tree" ||
                   field.type === "images" ||
                   field.type === "attributes" ||
-                  field.type === "variants";
+                  field.type === "variants" ||
+                  field.type === "jodit";
                 const isDisabled = typeof field.disabled === "function" ? field.disabled(values) : !!field.disabled;
 
                 return (
@@ -169,12 +183,45 @@ export default function CRUDEditForm<T extends Record<string, any>>({
                         <CategoryTreeSelector name={String(field.name)} options={(field as any).options || []} currentId={initialValues ? (initialValues as any).id : null} />
                         <ErrorMessage name={String(field.name)} />
                       </div>
+                    ) : field.type === "jalali-date" ? (
+                      <div className="space-y-2">
+                        <label className={LABEL_CLASS}>{field.label}</label>
+                            <DatePicker
+                          containerClassName="w-full"
+                          calendar={persian}
+                          locale={persian_fa}
+                          value={values[field.name] || null}
+                          onChange={(date: any) => {
+                            // ذخیره تاریخ خروجی به شکل ابجکت استاندارد تاریخ جهت سهولت ذخیره در پایگاه‌داده
+                            setFieldValue(String(field.name), date ? date.toDate() : null);
+                          }}
+                          disabled={isDisabled}
+                          // رندر کردن فیلد ورودی سفارشی سازگار با استایل‌های اصلی فرم
+                          render={(value, openShow) => (
+                            <input
+                              type="text"
+                              value={value}
+                              onClick={openShow}
+                              readOnly
+                              disabled={isDisabled}
+                              placeholder={(field as any).placeholder || "انتخاب تاریخ..."}
+                              className="w-full flex h-13 rounded-xl border border-slate-200/80 dark:border-[#1f2235]/60 bg-white/50 dark:bg-[#0c0d14]/40 px-3 py-2 text-sm ring-offset-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all font-sans cursor-pointer"
+                            />
+                          )}
+                        />
+                        <ErrorMessage name={String(field.name)} />
+                      </div>
                     ) : (
                       <FormField field={field} fields={fields as any} disabled={isDisabled} />
                     )}
                   </div>
                 );
               })}
+
+              {/* کد موقت جهت عیب‌یابی خطاهای پنهان فرمیک */}
+              {Object.keys(values).length > 0 && (
+                <FormikObserver fields={fields as any} /> 
+              )}
 
               <div className="md:col-span-2 flex flex-col-reverse sm:flex-row sm:justify-start gap-3 mt-8 border-t border-slate-100 dark:border-[#1f2235]/60 pt-6">
                 <Button

@@ -1,8 +1,8 @@
 // @/app/actions/crud/types.ts
 
 import { prisma } from "@/lib/prisma";
-// 👈 ایمپورت مستقیم انوم‌های پریزما به عنوان اشیاء زمان اجرا (Runtime Objects)
-import { Status, Position, UserRole } from "@prisma/client"; 
+// ایمپورت مستقیم وضعیت کامنت از انوم‌های پریزما
+import { Status, Position, UserRole, CommentStatus } from "@prisma/client"; 
 
 export type CRUDItemInput = Record<string, any>;
 
@@ -13,31 +13,43 @@ export const modelMap = {
   product: prisma.product,
   post: (prisma as any).post,
   user: (prisma as any).user,
+  postCategory: (prisma as any).postCategory,
+  postComment: (prisma as any).postComment, 
+  productFAQ: (prisma as any).productFAQ,
 };
 
 export type ModelKey = keyof typeof modelMap;
 
 export const enumFields: Record<ModelKey, Record<string, any>> = {
   banner: {
-    status: Status,     // 👈 اصلاح شد
-    position: Position, // 👈 اصلاح شد
+    status: Status,
+    position: Position,
   },
   brand: {
-    status: Status,     // 👈 اصلاح شد
+    status: Status,
   },
   category: {
-    status: Status,     // 👈 اصلاح شد
+    status: Status,
   },
   product: {
-    status: Status,     // 👈 اصلاح شد
+    status: Status,
   },
   post: {
-    status: Status,     // 👈 اصلاح شد
+    status: Status,
   },
   user: {
-    status: Status,     // 👈 اصلاح شد
-    role: UserRole,     // 👈 استفاده مستقیم از انوم معتبر UserRole
+    status: Status,
+    role: UserRole,
   },
+  postCategory: {
+    status: Status,
+  },
+  postComment: { 
+    status: CommentStatus, 
+  },
+  productFAQ: { 
+      status: Status,
+    },
 };
 
 export const searchFields: Record<ModelKey, string> = {
@@ -47,4 +59,7 @@ export const searchFields: Record<ModelKey, string> = {
   product: "title",
   post: "title",
   user: "name",
+  postCategory: "name",
+  postComment: "text",
+  productFAQ: "question",
 };

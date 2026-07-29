@@ -11,9 +11,12 @@ import { brandConfig } from "./models/brand.config";
 import { bannerConfig } from "./models/banner.config";
 import { postConfig } from "./models/post.config";
 import { userConfig } from "./models/user.config"; // 👈 فایل جدید کاربران
+import { postCategoryConfig } from "./models/postCategory.config";
+import { postCommentConfig } from "./models/postComment.config";
+import { productFAQConfig } from "./models/productFAQ.config";
 
 export interface ModelRegistryConfig {
-  modelKey: "product" | "category" | "brand" | "banner" | "post" | "user"; // 👈 اضافه شدن user
+  modelKey: "product" | "category" | "brand" | "banner" | "post" | "user" | "postCategory"; // 👈 اضافه شدن user
   modelName: string;
   enableStatusToggle: boolean;
   hiddenOnMobile: string[];
@@ -38,4 +41,7 @@ export const modelRegistry: Record<string, ModelRegistryConfig> = {
   banners: bannerConfig,
   posts: postConfig,
   users: userConfig, // 👈 رجیستر شدن بخش کاربران
+  postCategories: postCategoryConfig,
+  postComments: postCommentConfig,
+  productFAQs: productFAQConfig,
 };

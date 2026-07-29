@@ -52,7 +52,8 @@ const getPluralModelParam = (model: string): string => {
     brand: "brands",
     banner: "banners",
     post: "posts",
-    user: "users"
+    user: "users",
+    postCategory: "post-categories"
   };
   return map[model] || model;
 };
@@ -100,14 +101,19 @@ export default function CRUDPage({
   const enrichedFilterFields = useMemo(() => {
     return filterFields.map((field) => {
       if (field.type === "select" && field.key && dynamicOptions[field.key]) {
-        return {
-          ...field,
-          options: dynamicOptions[field.key],
-        };
-      }
-      return field;
-    });
-  }, [filterFields, dynamicOptions]);
+              // فیلتر کردن و حذف گزینه خنثی "null" فقط برای نوار فیلتر بالای جدول
+              const cleanOptions = dynamicOptions[field.key].filter(
+                (opt) => opt.value !== "null"
+              );
+              
+              return {
+                ...field,
+                options: cleanOptions,
+              };
+            }
+            return field;
+          });
+        }, [filterFields, dynamicOptions]);
 
   const handleFetchProductStats = useCallback(async () => {
     if (model !== "product") return;

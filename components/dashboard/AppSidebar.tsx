@@ -16,7 +16,8 @@ import {
   FiBox, 
   FiLock, 
   FiChevronDown,
-  FiMoreHorizontal
+  FiMoreHorizontal,
+  FiSettings
 } from "react-icons/fi";
 
 type Accent = "indigo" | "emerald" | "rose" | "amber";
@@ -112,7 +113,14 @@ const othersItems: NavItem[] = [
       { name: "ثبت‌نام", path: "/signup" }
     ] 
   },
+  { 
+    icon: <FiSettings className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
+    name: "تنظیمات", 
+    path: "/panel/settings" 
+  },
 ];
+
+
 
 // ساختار نگاشت رنگ سایدبار برای پوشش چهار رنگ فعال انتخابگر
 const sidebarAccentStyles: Record<Accent, {

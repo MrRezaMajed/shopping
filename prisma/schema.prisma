@@ -768,3 +768,31 @@ model Page {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
+
+model SiteSetting {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique @default("general-settings")
+  siteTitle       String?  // عنوان سایت
+  siteDescription String?  // توضیحات/شعار سایت
+  logoUrl         String?  // آدرس لوگو
+  faviconUrl      String?  // آدرس آیکون
+  phone           String?  // شماره تماس
+  email           String?  // ایمیل پشتیبانی
+  address         String?  // آدرس متنی
+
+  // شبکه‌های اجتماعی بین‌المللی و پیام‌رسان‌های ایرانی
+  instagram       String?  // لینک اینستاگرام
+  telegram        String?  // لینک تلگرام
+  whatsapp        String?  // شماره/لینک واتساپ
+  bale            String?  // لینک/آیدی پیام‌رسان بله
+  eitaa           String?  // لینک/آیدی پیام‌رسان ایتا
+  soroush         String?  // لینک/آیدی پیام‌رسان سروش
+  rubika          String?  // لینک/آیدی روبیکا
+
+  isMaintenance   Boolean  @default(false) // حالت در دست تعمیر
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("site_settings")
+}

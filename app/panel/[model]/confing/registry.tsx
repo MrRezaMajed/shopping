@@ -1,5 +1,3 @@
-// @/components/ui/CRUDPage/confing/registry.ts
-
 import * as Yup from "yup";
 import { CRUDField } from "@/components/ui/CRUDPage/types";
 import { FilterField } from "@/components/ui/GenericFilterBar/types";
@@ -10,13 +8,15 @@ import { categoryConfig } from "./models/category.config";
 import { brandConfig } from "./models/brand.config";
 import { bannerConfig } from "./models/banner.config";
 import { postConfig } from "./models/post.config";
-import { userConfig } from "./models/user.config"; // 👈 فایل جدید کاربران
+import { userConfig } from "./models/user.config";
 import { postCategoryConfig } from "./models/postCategory.config";
 import { postCommentConfig } from "./models/postComment.config";
 import { productFAQConfig } from "./models/productFAQ.config";
+import { pageConfig } from "./models/page.config";
 
 export interface ModelRegistryConfig {
-  modelKey: "product" | "category" | "brand" | "banner" | "post" | "user" | "postCategory"; // 👈 اضافه شدن user
+  // 👈 اضافه شدن "navigationMenu" به کلیدهای معتبر مدل
+  modelKey: "product" | "category" | "brand" | "banner" | "post" | "user" | "postCategory" | "page"; 
   modelName: string;
   enableStatusToggle: boolean;
   hiddenOnMobile: string[];
@@ -29,9 +29,11 @@ export interface ModelRegistryConfig {
   formFields: CRUDField[];
   filterFields: FilterField[];
 
-  // 👈 پروپ‌های محدودکننده برای صفحات بدون فرم
   disableCreate?: boolean;
   disableEdit?: boolean;
+  
+  // 👈 فیلد جدید جهت کنترل الگوهای تک‌رکوردی (مانند تنظیمات یا منو)
+  isSingleton?: boolean; 
 }
 
 export const modelRegistry: Record<string, ModelRegistryConfig> = {
@@ -40,8 +42,10 @@ export const modelRegistry: Record<string, ModelRegistryConfig> = {
   brands: brandConfig,
   banners: bannerConfig,
   posts: postConfig,
-  users: userConfig, // 👈 رجیستر شدن بخش کاربران
+  users: userConfig,
   postCategories: postCategoryConfig,
   postComments: postCommentConfig,
   productFAQs: productFAQConfig,
+  pages: pageConfig, // 👈 ۳. کلید جدول صفحات
+  page: pageConfig,  // 👈 جهت پشتیبانی مفرد
 };

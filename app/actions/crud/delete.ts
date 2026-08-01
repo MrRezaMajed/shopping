@@ -174,7 +174,8 @@ export async function restoreItem(model: ModelKey, id: number) {
         category: "Category",
         product: "Product",
         post: "Post",
-        user: "User" // 👈 نگاشت فیزیکی جدول کاربران برای عملیات مستقیم اس‌کیوال
+        user: "User",
+        page: "Page",
       };
 
       const tableName = tableNameMap[model];
@@ -226,9 +227,8 @@ async function getItemDisplayName(model: ModelKey, id: number): Promise<string> 
     const db = modelMap[model];
     if (!db) return `شناسه ${id}`;
 
-    const isTitleModel = model === "product" || model === "banner" || model === "post";
-    const selectField = isTitleModel ? "title" : "name"; // نام کاربر به دلیل name بودن اینجا به درستی استخراج می‌شود
-
+    const isTitleModel = model === "product" || model === "banner" || model === "post" || model === "page";
+        const selectField = isTitleModel ? "title" : "name"; 
     const item = await (db as any).findUnique({
       where: { id },
       select: {

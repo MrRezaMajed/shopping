@@ -739,3 +739,32 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+////////////////////////////////////
+/// NAVIGATION MENU
+////////////////////////////////////
+
+model NavigationMenu {
+  id            Int       @id @default(autoincrement())
+  key           String    @unique // برای شناسایی منو؛ مثلاً "header-menu" یا "footer-menu"
+  title         String    // نام منو جهت نمایش در پنل؛ مثلاً "منوی هدر اصلی"
+  content       String    // ذخیره‌سازی کل ساختار درختی منو به صورت متن JSON
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  softDeletedAt DateTime? // هماهنگ با الگوی حذف نرم پروژه شما
+}
+
+
+model Page {
+  id            Int       @id @default(autoincrement())
+  title         String
+  slug          String    @unique
+  content       String?   
+  seoTitle      String?
+  seoDescription String?  
+  status        Status    @default(ACTIVE)
+  softDeletedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}

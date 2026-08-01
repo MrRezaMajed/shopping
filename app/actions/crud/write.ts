@@ -19,10 +19,11 @@ const pluralModelMap: Record<string, string> = {
   brand: "brands",
   banner: "banners",
   post: "posts",
-  user: "users", // 👈 هماهنگ شدن آدرس ریدایرکت/کش کاربران
+  user: "users",
   postCategory: "post-categories",
   postComment: "post-comments",
   productFAQ: "product-faqs",
+  page: "pages",
 };
 
 /**

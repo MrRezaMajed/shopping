@@ -16,6 +16,7 @@ export const modelMap = {
   postCategory: (prisma as any).postCategory,
   postComment: (prisma as any).postComment, 
   productFAQ: (prisma as any).productFAQ,
+  page: (prisma as any).page,
 };
 
 export type ModelKey = keyof typeof modelMap;
@@ -48,8 +49,11 @@ export const enumFields: Record<ModelKey, Record<string, any>> = {
     status: CommentStatus, 
   },
   productFAQ: { 
-      status: Status,
-    },
+    status: Status,
+  },
+  page: {
+    status: Status
+  },
 };
 
 export const searchFields: Record<ModelKey, string> = {
@@ -62,4 +66,5 @@ export const searchFields: Record<ModelKey, string> = {
   postCategory: "name",
   postComment: "text",
   productFAQ: "question",
+  page: "title",
 };

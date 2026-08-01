@@ -52,6 +52,8 @@ const navItems: NavItem[] = [
       { name: "پست‌ها", path: "/panel/posts" },
       { name: "نظرات", path: "/panel/post-comments" },
       { name: "سوالات متداول", path: "/panel/product-faqs" },
+      { name: "منو", path: "/panel/navigation-menus" },
+      { name: "صفحه‌ساز", path: "/panel/pages" },
     ] 
   },
   { 

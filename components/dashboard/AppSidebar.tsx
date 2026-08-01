@@ -17,8 +17,11 @@ import {
   FiLock, 
   FiChevronDown,
   FiMoreHorizontal,
-  FiSettings
+  FiSettings,
+  FiUsers
 } from "react-icons/fi";
+import { FaUserGroup } from "react-icons/fa6";
+
 
 type Accent = "indigo" | "emerald" | "rose" | "amber";
 
@@ -118,6 +121,13 @@ const othersItems: NavItem[] = [
     name: "تنظیمات", 
     path: "/panel/settings" 
   },
+  { 
+    icon: <FaUserGroup className="w-5 h-5 transition-transform duration-300 group-hover:scale-105" />, 
+    name: " کاربران ادمین", 
+    path: "/panel/users" 
+  }
+     
+  
 ];
 
 

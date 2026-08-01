@@ -42,10 +42,11 @@ export const modelRegistry: Record<string, ModelRegistryConfig> = {
   brands: brandConfig,
   banners: bannerConfig,
   posts: postConfig,
-  users: userConfig,
   postCategories: postCategoryConfig,
   postComments: postCommentConfig,
   productFAQs: productFAQConfig,
   pages: pageConfig, // 👈 ۳. کلید جدول صفحات
   page: pageConfig,  // 👈 جهت پشتیبانی مفرد
+  users: userConfig,
+  user: userConfig,
 };
